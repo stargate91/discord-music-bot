@@ -23,7 +23,10 @@ wheels/
 
 # Dynamic bot files
 *.log
-*.json
+config.local.json
+embed_state.json
+favorites.json
+history.json
 !.vscode/*.json
 
 # Environment

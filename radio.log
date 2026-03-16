@@ -1,0 +1,310 @@
+2026-03-16 07:18:56,108 [INFO] Online as: Tatiana#0890
+2026-03-16 07:18:58,021 [INFO] Slash commands synced to guild: 1083433370815582240
+2026-03-16 07:19:12,235 [INFO] [ACTION] JOIN with [1473040133057155155] by climaxim
+2026-03-16 07:19:12,236 [INFO] [ACTION] ADD_EXT_LINK with [https://www.youtube.com/watch?v=_kBBAOK-Qoc&list=RD_kBBAOK-Qoc&start_radio=1] by climaxim
+2026-03-16 07:19:12,442 [WARNING] Could not delete message: Missing permissions.
+2026-03-16 07:19:14,095 [INFO] [QUEUE] New link added: https://www.youtube.com/watch?v=_kBBAOK-Qoc&list=RD_kBBAOK-Qoc&start_radio=1
+2026-03-16 07:19:16,020 [INFO] [RESOLVER] Successfully resolved: Waves On Waves - Waves_On_Waves X Pastel Arcade X Waves On Waves 1987 "Pulse" (Official Video)
+2026-03-16 07:19:22,289 [INFO] [PLAYER] Started playing: Waves On Waves - Waves_On_Waves X Pastel Arcade X Waves On Waves 1987 "Pulse" (Official Video) (201s)
+2026-03-16 07:22:48,396 [INFO] [PLAYER] Track finished normally: Waves_On_Waves X Pastel Arcade X Waves On Waves 1987 "Pulse" (Official Video)
+2026-03-16 07:26:03,410 [INFO] Online as: Tatiana#0890
+2026-03-16 07:26:05,320 [INFO] Slash commands synced to guild: 1083433370815582240
+2026-03-16 07:26:16,457 [WARNING] Could not delete message from climaxim: Missing 'Manage Messages' permission.
+2026-03-16 07:26:16,458 [INFO] [ACTION] JOIN with [1473040133057155155] by climaxim
+2026-03-16 07:26:16,459 [INFO] [ACTION] ADD_EXT_LINK with [https://www.youtube.com/watch?v=_kBBAOK-Qoc&list=RD_kBBAOK-Qoc&start_radio=1] by climaxim
+2026-03-16 07:26:18,582 [INFO] [QUEUE] New link added: https://www.youtube.com/watch?v=_kBBAOK-Qoc&list=RD_kBBAOK-Qoc&start_radio=1
+2026-03-16 07:26:20,452 [INFO] [RESOLVER] Successfully resolved: Waves On Waves - Waves_On_Waves X Pastel Arcade X Waves On Waves 1987 "Pulse" (Official Video)
+2026-03-16 07:26:22,838 [INFO] [PLAYER] Started playing: Waves On Waves - Waves_On_Waves X Pastel Arcade X Waves On Waves 1987 "Pulse" (Official Video) (201s)
+2026-03-16 07:29:48,841 [INFO] [ACTION] ADD_EXT_LINK with [07:26:03] by climaxim
+2026-03-16 07:29:48,842 [INFO] [QUEUE] New link added: 07:26:03
+2026-03-16 07:29:48,843 [WARNING] [RESOLVER] Failed to resolve link: 07:26:03
+2026-03-16 07:29:50,395 [INFO] [PLAYER] Track finished normally: Waves_On_Waves X Pastel Arcade X Waves On Waves 1987 "Pulse" (Official Video)
+2026-03-16 07:30:02,842 [INFO] [ACTION] ADD_EXT_LINK with [https://www.youtube.com/watch?v=_kBBAOK-Qoc&list=RD_kBBAOK-Qoc&start_radio=1] by climaxim
+2026-03-16 07:30:02,843 [INFO] [QUEUE] New link added: https://www.youtube.com/watch?v=_kBBAOK-Qoc&list=RD_kBBAOK-Qoc&start_radio=1
+2026-03-16 07:30:04,715 [INFO] [RESOLVER] Successfully resolved: Waves On Waves - Waves_On_Waves X Pastel Arcade X Waves On Waves 1987 "Pulse" (Official Video)
+2026-03-16 07:30:07,349 [INFO] [PLAYER] Started playing: Waves On Waves - Waves_On_Waves X Pastel Arcade X Waves On Waves 1987 "Pulse" (Official Video) (201s)
+2026-03-16 07:33:33,454 [INFO] [PLAYER] Track finished normally: Waves_On_Waves X Pastel Arcade X Waves On Waves 1987 "Pulse" (Official Video)
+2026-03-16 07:33:46,820 [INFO] Online as: Tatiana#0890
+2026-03-16 07:33:48,733 [INFO] Slash commands synced to guild: 1083433370815582240
+2026-03-16 07:33:59,697 [INFO] [ACTION] JOIN with [1473040133057155155] by climaxim
+2026-03-16 07:33:59,697 [INFO] [ACTION] ADD_EXT_LINK with [https://www.youtube.com/watch?v=_kBBAOK-Qoc&list=RD_kBBAOK-Qoc&start_radio=1] by climaxim
+2026-03-16 07:34:01,479 [INFO] [QUEUE] New link added: https://www.youtube.com/watch?v=_kBBAOK-Qoc&list=RD_kBBAOK-Qoc&start_radio=1
+2026-03-16 07:34:03,320 [INFO] [RESOLVER] Successfully resolved: Waves On Waves - Waves_On_Waves X Pastel Arcade X Waves On Waves 1987 "Pulse" (Official Video)
+2026-03-16 07:34:05,426 [INFO] [PLAYER] Started playing: Waves On Waves - Waves_On_Waves X Pastel Arcade X Waves On Waves 1987 "Pulse" (Official Video) (201s)
+2026-03-16 07:37:31,534 [INFO] [PLAYER] Track finished normally: Waves_On_Waves X Pastel Arcade X Waves On Waves 1987 "Pulse" (Official Video)
+2026-03-16 07:38:03,641 [INFO] Online as: Tatiana#0890
+2026-03-16 07:38:05,273 [INFO] Slash commands synced to guild: 1083433370815582240
+2026-03-16 07:38:58,027 [INFO] [ACTION] JOIN with [1473040133057155155] by climaxim
+2026-03-16 07:39:31,037 [INFO] [ACTION] DISCONNECT by climaxim
+2026-03-16 07:39:36,385 [INFO] [ACTION] JOIN with [1473040133057155155] by climaxim
+2026-03-16 07:40:59,146 [INFO] Online as: Tatiana#0890
+2026-03-16 07:41:00,835 [INFO] Slash commands synced to guild: 1083433370815582240
+2026-03-16 07:41:04,065 [INFO] [ACTION] JOIN with [1473040133057155155] by climaxim
+2026-03-16 07:41:36,642 [INFO] [ACTION] ADD_EXT_LINK with [https://www.youtube.com/watch?v=_kBBAOK-Qoc&list=RD_kBBAOK-Qoc&start_radio=1] by climaxim
+2026-03-16 07:41:36,644 [INFO] [QUEUE] New link added: https://www.youtube.com/watch?v=_kBBAOK-Qoc&list=RD_kBBAOK-Qoc&start_radio=1
+2026-03-16 07:41:38,506 [INFO] [RESOLVER] Successfully resolved: Waves On Waves - Waves_On_Waves X Pastel Arcade X Waves On Waves 1987 "Pulse" (Official Video)
+2026-03-16 07:41:40,694 [INFO] [PLAYER] Started playing: Waves On Waves - Waves_On_Waves X Pastel Arcade X Waves On Waves 1987 "Pulse" (Official Video) (201s)
+2026-03-16 07:42:23,257 [INFO] [ACTION] PAUSE by climaxim
+2026-03-16 07:42:23,261 [INFO] [PLAYER] Pausing playback.
+2026-03-16 07:42:38,847 [INFO] [ACTION] ADD_EXT_LINK with [https://www.youtube.com/watch?v=_kBBAOK-Qoc&list=RD_kBBAOK-Qoc&start_radio=1] by climaxim
+2026-03-16 07:42:38,848 [INFO] [QUEUE] New link added: https://www.youtube.com/watch?v=_kBBAOK-Qoc&list=RD_kBBAOK-Qoc&start_radio=1
+2026-03-16 07:42:40,780 [INFO] [RESOLVER] Successfully resolved: Waves On Waves - Waves_On_Waves X Pastel Arcade X Waves On Waves 1987 "Pulse" (Official Video)
+2026-03-16 07:42:42,871 [INFO] [ACTION] STOP by climaxim
+2026-03-16 07:42:42,875 [INFO] [PLAYER] Stopping playback.
+2026-03-16 07:42:45,371 [INFO] [PLAYER] Track finished normally: Waves_On_Waves X Pastel Arcade X Waves On Waves 1987 "Pulse" (Official Video)
+2026-03-16 07:43:32,352 [INFO] [ACTION] ADD_EXT_LINK with [https://www.youtube.com/watch?v=_kBBAOK-Qoc&list=RD_kBBAOK-Qoc&start_radio=1] by climaxim
+2026-03-16 07:43:32,354 [INFO] [QUEUE] New link added: https://www.youtube.com/watch?v=_kBBAOK-Qoc&list=RD_kBBAOK-Qoc&start_radio=1
+2026-03-16 07:43:33,682 [INFO] [PLAYER] Started playing: Waves On Waves - Waves_On_Waves X Pastel Arcade X Waves On Waves 1987 "Pulse" (Official Video) (201s)
+2026-03-16 07:43:34,198 [INFO] [RESOLVER] Successfully resolved: Waves On Waves - Waves_On_Waves X Pastel Arcade X Waves On Waves 1987 "Pulse" (Official Video)
+2026-03-16 07:44:14,597 [INFO] [ACTION] PAUSE by climaxim
+2026-03-16 07:44:14,598 [INFO] [PLAYER] Pausing playback.
+2026-03-16 07:47:47,772 [INFO] [ACTION] ADD_EXT_LINK with [https://www.youtube.com/watch?v=1iR_5AfGO_o&pp=ygUNbm9pc2lhIHN1YmR1ZQ%3D%3D] by climaxim
+2026-03-16 07:47:47,773 [INFO] [QUEUE] New link added: https://www.youtube.com/watch?v=1iR_5AfGO_o&pp=ygUNbm9pc2lhIHN1YmR1ZQ%3D%3D
+2026-03-16 07:47:49,577 [INFO] [RESOLVER] Successfully resolved: CRC1000 - Noisia - Subdue
+2026-03-16 07:48:00,259 [INFO] [ACTION] SKIP by climaxim
+2026-03-16 07:48:00,259 [INFO] [PLAYER] Skipping current track.
+2026-03-16 07:48:00,260 [INFO] [PLAYER] Monitor loop broke before track finished: Waves_On_Waves X Pastel Arcade X Waves On Waves 1987 "Pulse" (Official Video)
+2026-03-16 07:52:43,752 [INFO] Online as: Tatiana#0890
+2026-03-16 07:52:45,148 [INFO] Slash commands synced to guild: 1083433370815582240
+2026-03-16 07:52:57,536 [INFO] [ACTION] JOIN with [1473040133057155155] by climaxim
+2026-03-16 07:52:57,539 [INFO] [ACTION] ADD_EXT_LINK with [https://www.youtube.com/watch?v=1iR_5AfGO_o&pp=ygUNbm9pc2lhIHN1YmR1ZQ%3D%3D] by climaxim
+2026-03-16 07:53:00,019 [INFO] [QUEUE] New link added: https://www.youtube.com/watch?v=1iR_5AfGO_o&pp=ygUNbm9pc2lhIHN1YmR1ZQ%3D%3D
+2026-03-16 07:53:01,835 [INFO] [RESOLVER] Successfully resolved: CRC1000 - Noisia - Subdue
+2026-03-16 07:53:03,849 [INFO] [PLAYER] Started playing: CRC1000 - Noisia - Subdue (337s)
+2026-03-16 07:53:19,528 [INFO] [ACTION] SET_VOLUME with [1.0] by climaxim
+2026-03-16 07:53:19,534 [INFO] [PLAYER] Volume changed to: 100%
+2026-03-16 07:53:19,535 [INFO] [PLAYER] Monitor loop broke before track finished: Noisia - Subdue
+2026-03-16 07:53:20,074 [INFO] [PLAYER] Started playing: CRC1000 - Noisia - Subdue (337s)
+2026-03-16 07:53:29,845 [INFO] [ACTION] SEEK with [150] by climaxim
+2026-03-16 07:53:29,847 [INFO] [PLAYER] Seeking to: 150s
+2026-03-16 07:53:29,847 [INFO] [PLAYER] Monitor loop broke before track finished: Noisia - Subdue
+2026-03-16 07:53:30,379 [INFO] [PLAYER] Started playing: CRC1000 - Noisia - Subdue (337s)
+2026-03-16 07:54:50,049 [INFO] [SEARCH] User climaxim searched for: Black Sun Empire Arrakis
+2026-03-16 07:54:52,272 [INFO] [SEARCH] Found 20 results for: Black Sun Empire Arrakis
+2026-03-16 07:54:56,508 [INFO] [ACTION] ADD_EXT_LINK with [https://www.youtube.com/watch?v=S_v172PgToE] by climaxim
+2026-03-16 07:54:56,511 [INFO] [QUEUE] New link added: https://www.youtube.com/watch?v=S_v172PgToE
+2026-03-16 07:54:58,439 [INFO] [RESOLVER] Successfully resolved: blacksunempire - Black Sun Empire - Arrakis
+2026-03-16 07:55:04,665 [INFO] [ACTION] SKIP by climaxim
+2026-03-16 07:55:04,667 [INFO] [PLAYER] Skipping current track.
+2026-03-16 07:55:04,670 [INFO] [PLAYER] Monitor loop broke before track finished: Noisia - Subdue
+2026-03-16 07:55:05,210 [INFO] [PLAYER] Started playing: blacksunempire - Black Sun Empire - Arrakis (448s)
+2026-03-16 07:55:51,264 [INFO] [ACTION] PAUSE by climaxim
+2026-03-16 07:55:51,267 [INFO] [PLAYER] Pausing playback.
+2026-03-16 07:55:56,676 [INFO] [ACTION] REPLAY by climaxim
+2026-03-16 07:55:56,677 [INFO] [PLAYER] Resuming playback.
+2026-03-16 07:55:58,086 [INFO] [ACTION] STOP by climaxim
+2026-03-16 07:55:58,088 [INFO] [PLAYER] Stopping playback.
+2026-03-16 07:55:59,041 [INFO] [PLAYER] Track finished normally: Black Sun Empire - Arrakis
+2026-03-16 07:56:01,224 [INFO] [ACTION] REPLAY by climaxim
+2026-03-16 07:56:12,698 [INFO] [ACTION] REPLAY by climaxim
+2026-03-16 07:56:19,551 [INFO] [ACTION] BACK by climaxim
+2026-03-16 07:56:23,897 [INFO] [ACTION] BACK by climaxim
+2026-03-16 07:56:26,272 [INFO] [ACTION] BACK by climaxim
+2026-03-16 07:57:02,885 [INFO] [SEARCH] User climaxim searched for: Black Sun Empire Arrakis
+2026-03-16 07:57:04,627 [INFO] [SEARCH] Found 20 results for: Black Sun Empire Arrakis
+2026-03-16 07:57:07,319 [INFO] [ACTION] ADD_EXT_LINK with [https://www.youtube.com/watch?v=S_v172PgToE] by climaxim
+2026-03-16 07:57:07,320 [INFO] [QUEUE] New link added: https://www.youtube.com/watch?v=S_v172PgToE
+2026-03-16 07:57:09,145 [INFO] [RESOLVER] Successfully resolved: blacksunempire - Black Sun Empire - Arrakis
+2026-03-16 07:57:11,294 [INFO] [PLAYER] Started playing: blacksunempire - Black Sun Empire - Arrakis (448s)
+2026-03-16 07:57:15,722 [INFO] [ACTION] STOP by climaxim
+2026-03-16 07:57:15,723 [INFO] [PLAYER] Stopping playback.
+2026-03-16 07:57:17,292 [INFO] [ACTION] STOP by climaxim
+2026-03-16 07:57:18,250 [INFO] [PLAYER] Track finished normally: Black Sun Empire - Arrakis
+2026-03-16 07:57:20,426 [INFO] [ACTION] STOP by climaxim
+2026-03-16 07:57:22,449 [INFO] [ACTION] REPLAY by climaxim
+2026-03-16 07:57:28,286 [INFO] [ACTION] REPLAY by climaxim
+2026-03-16 07:58:58,879 [INFO] Online as: Tatiana#0890
+2026-03-16 07:59:00,417 [INFO] Slash commands synced to guild: 1083433370815582240
+2026-03-16 08:05:52,097 [INFO] Online as: Tatiana#0890
+2026-03-16 08:05:53,445 [INFO] Slash commands synced to guild: 1083433370815582240
+2026-03-16 08:06:40,686 [INFO] [ACTION] JOIN with [1473040133057155155] by climaxim
+2026-03-16 08:06:50,653 [INFO] [ACTION] ADD_EXT_LINK with [https://www.youtube.com/playlist?list=PLbgjLtlwj1SnG9nUxeMZMsMv0JFy9H2_c] by climaxim
+2026-03-16 08:06:50,654 [INFO] [QUEUE] Playlist detected, starting batch resolution: https://www.youtube.com/playlist?list=PLbgjLtlwj1SnG9nUxeMZMsMv0JFy9H2_c
+2026-03-16 08:06:52,199 [INFO] [RESOLVER] Playlist resolved: 13 tracks found.
+2026-03-16 08:07:07,446 [ERROR] UI Error in callback: maximum number of children exceeded (40)
+2026-03-16 08:09:27,151 [INFO] Online as: Tatiana#0890
+2026-03-16 08:09:28,880 [INFO] Slash commands synced to guild: 1083433370815582240
+2026-03-16 08:09:35,969 [INFO] [ACTION] JOIN with [1473040133057155155] by climaxim
+2026-03-16 08:09:42,337 [INFO] [ACTION] ADD_EXT_LINK with [https://www.youtube.com/playlist?list=PLbgjLtlwj1SnG9nUxeMZMsMv0JFy9H2_c] by climaxim
+2026-03-16 08:09:42,339 [INFO] [QUEUE] Playlist detected, starting batch resolution: https://www.youtube.com/playlist?list=PLbgjLtlwj1SnG9nUxeMZMsMv0JFy9H2_c
+2026-03-16 08:09:43,900 [INFO] [RESOLVER] Playlist resolved: 13 tracks found.
+2026-03-16 08:10:09,960 [INFO] [ACTION] REPLAY by climaxim
+2026-03-16 08:10:12,643 [INFO] [PLAYER] Started playing: DJ Blyatman - DJ Blyatman & Russian Village Boys - EZ KATKA (Official Music Video) (213s)
+2026-03-16 08:11:36,824 [INFO] [ACTION] SKIP by climaxim
+2026-03-16 08:11:36,824 [INFO] [PLAYER] Skipping current track.
+2026-03-16 08:11:36,825 [INFO] [PLAYER] Monitor loop broke before track finished: DJ Blyatman & Russian Village Boys - EZ KATKA (Official Music Video)
+2026-03-16 08:11:40,774 [INFO] [PLAYER] Started playing: Russian Village Boys - DJ Blyatman & Russian Village Boys - Instababe (Official Music Video) (236s)
+2026-03-16 08:14:33,688 [INFO] [ACTION] SKIP by climaxim
+2026-03-16 08:14:33,689 [INFO] [PLAYER] Skipping current track.
+2026-03-16 08:14:33,689 [INFO] [PLAYER] Monitor loop broke before track finished: DJ Blyatman & Russian Village Boys - Instababe (Official Music Video)
+2026-03-16 08:14:36,923 [INFO] [PLAYER] Started playing: DJ Blyatman - DJ Blyatman & DJ Pelix - OUR SOUND (Official Music Video) ft. xeK (198s)
+2026-03-16 08:14:45,731 [INFO] [ACTION] SKIP by climaxim
+2026-03-16 08:14:45,741 [INFO] [PLAYER] Skipping current track.
+2026-03-16 08:14:45,742 [INFO] [PLAYER] Monitor loop broke before track finished: DJ Blyatman & DJ Pelix - OUR SOUND (Official Music Video) ft. xeK
+2026-03-16 08:14:49,082 [INFO] [PLAYER] Started playing: DJ Blyatman - DJ Blyatman & Russian Village Boys - CYKA BLYAT (Official Music Video) (183s)
+2026-03-16 08:15:59,748 [INFO] [ACTION] SKIP by climaxim
+2026-03-16 08:15:59,749 [INFO] [PLAYER] Skipping current track.
+2026-03-16 08:15:59,749 [INFO] [PLAYER] Monitor loop broke before track finished: DJ Blyatman & Russian Village Boys - CYKA BLYAT (Official Music Video)
+2026-03-16 08:16:03,231 [INFO] [PLAYER] Started playing: Manne Bass - XS Project - Bochka, Bass, Kolbaser [Bass Boosted] (Russian Special) (185s)
+2026-03-16 08:16:15,794 [INFO] [ACTION] SET_VOLUME with [1.0] by climaxim
+2026-03-16 08:16:15,796 [INFO] [PLAYER] Volume changed to: 100%
+2026-03-16 08:16:15,796 [INFO] [PLAYER] Monitor loop broke before track finished: XS Project - Bochka, Bass, Kolbaser [Bass Boosted] (Russian Special)
+2026-03-16 08:16:16,337 [INFO] [PLAYER] Started playing: Manne Bass - XS Project - Bochka, Bass, Kolbaser [Bass Boosted] (Russian Special) (185s)
+2026-03-16 08:17:05,976 [INFO] [ACTION] SKIP by climaxim
+2026-03-16 08:17:05,976 [INFO] [PLAYER] Skipping current track.
+2026-03-16 08:17:05,978 [INFO] [PLAYER] Monitor loop broke before track finished: XS Project - Bochka, Bass, Kolbaser [Bass Boosted] (Russian Special)
+2026-03-16 08:17:09,284 [INFO] [PLAYER] Started playing: DJ Blyatman - DJ Blyatman & Russian Village Boys - MADE IN RUSSIA (Official Music Video) (208s)
+2026-03-16 08:17:14,364 [INFO] [ACTION] SKIP by climaxim
+2026-03-16 08:17:14,365 [INFO] [PLAYER] Skipping current track.
+2026-03-16 08:17:14,366 [INFO] [PLAYER] Monitor loop broke before track finished: DJ Blyatman & Russian Village Boys - MADE IN RUSSIA (Official Music Video)
+2026-03-16 08:17:22,692 [INFO] [PLAYER] Started playing: DJ Blyatman - DJ Blyatman & XS Project - MATRYOSHKA (Official Music Video) (170s)
+2026-03-16 08:17:38,480 [INFO] [ACTION] SET_VOLUME with [0.5] by climaxim
+2026-03-16 08:17:38,481 [INFO] [PLAYER] Volume changed to: 50%
+2026-03-16 08:17:38,482 [INFO] [PLAYER] Monitor loop broke before track finished: DJ Blyatman & XS Project - MATRYOSHKA (Official Music Video)
+2026-03-16 08:17:39,025 [INFO] [PLAYER] Started playing: DJ Blyatman - DJ Blyatman & XS Project - MATRYOSHKA (Official Music Video) (170s)
+2026-03-16 08:17:41,407 [INFO] [ACTION] SKIP by climaxim
+2026-03-16 08:17:41,407 [INFO] [PLAYER] Skipping current track.
+2026-03-16 08:17:41,408 [INFO] [PLAYER] Monitor loop broke before track finished: DJ Blyatman & XS Project - MATRYOSHKA (Official Music Video)
+2026-03-16 08:17:44,648 [INFO] [PLAYER] Started playing: Russian Village Boys - DJ Blyatman & Russian Village Boys - RAZJEBASSER (Official Music Video) (184s)
+2026-03-16 08:17:52,976 [INFO] [ACTION] SKIP by climaxim
+2026-03-16 08:17:52,976 [INFO] [PLAYER] Skipping current track.
+2026-03-16 08:17:52,977 [INFO] [PLAYER] Monitor loop broke before track finished: DJ Blyatman & Russian Village Boys - RAZJEBASSER (Official Music Video)
+2026-03-16 08:17:56,328 [INFO] [PLAYER] Started playing: DJ Blyatman - DJ BLYATMAN - AUTOBUS feat. Nick Sax & Lolli (Official Music Video) (175s)
+2026-03-16 08:20:28,367 [INFO] [ACTION] PAUSE by climaxim
+2026-03-16 08:20:28,367 [INFO] [PLAYER] Pausing playback.
+2026-03-16 08:21:09,840 [INFO] [PLAYER] Track finished normally: DJ BLYATMAN - AUTOBUS feat. Nick Sax & Lolli (Official Music Video)
+2026-03-16 08:21:15,035 [INFO] Online as: Tatiana#0890
+2026-03-16 08:21:16,633 [INFO] Slash commands synced to guild: 1083433370815582240
+2026-03-16 08:21:19,764 [INFO] [ACTION] JOIN with [1473040133057155155] by climaxim
+2026-03-16 08:22:34,324 [INFO] Online as: Tatiana#0890
+2026-03-16 08:22:36,552 [INFO] Slash commands synced to guild: 1083433370815582240
+2026-03-16 08:23:05,301 [INFO] [ACTION] JOIN with [1473040133057155155] by climaxim
+2026-03-16 08:28:08,489 [INFO] Auto-disconnecting: Dynamic idle timeout (5 mins).
+2026-03-16 08:28:08,490 [INFO] [ACTION] DISCONNECT
+2026-03-16 08:29:07,411 [INFO] Online as: Tatiana#0890
+2026-03-16 08:29:08,911 [INFO] Slash commands synced to guild: 1083433370815582240
+2026-03-16 08:33:09,219 [INFO] [ACTION] JOIN with [1417380658992513064] by climaxim
+2026-03-16 08:33:09,774 [INFO] [SOLITARY] Bot is alone. Starting 300s countdown.
+2026-03-16 08:38:14,118 [INFO] Auto-disconnecting: Bot was alone for 300s.
+2026-03-16 08:38:14,120 [INFO] [ACTION] DISCONNECT
+2026-03-16 08:38:15,129 [INFO] [SOLITARY] Bot is alone. Starting 300s countdown.
+2026-03-16 08:38:15,131 [INFO] Auto-disconnecting: Dynamic idle timeout (5 mins).
+2026-03-16 08:38:15,132 [INFO] [ACTION] DISCONNECT
+2026-03-16 09:22:16,477 [INFO] Online as: Tatiana#0890
+2026-03-16 09:22:17,787 [INFO] Slash commands synced to guild: 1083433370815582240
+2026-03-16 09:22:25,751 [INFO] [ACTION] JOIN with [1417380658992513064] by climaxim
+2026-03-16 09:22:26,293 [INFO] [SOLITARY] Bot is alone. Starting 300s countdown.
+2026-03-16 09:22:54,051 [INFO] [ACTION] REPLAY by climaxim
+2026-03-16 09:22:55,684 [INFO] [ACTION] STOP by climaxim
+2026-03-16 09:27:31,094 [INFO] Auto-disconnecting: Bot was alone for 300s.
+2026-03-16 09:27:31,096 [INFO] [ACTION] DISCONNECT
+2026-03-16 09:27:32,099 [INFO] [SOLITARY] Bot is alone. Starting 300s countdown.
+2026-03-16 09:29:03,591 [INFO] Online as: Tatiana#0890
+2026-03-16 09:29:04,939 [INFO] Slash commands synced to guild: 1083433370815582240
+2026-03-16 09:29:08,586 [INFO] [ACTION] JOIN with [1417380658992513064] by climaxim
+2026-03-16 09:29:09,152 [INFO] [SOLITARY] Bot is alone. Starting 300s countdown.
+2026-03-16 09:29:35,591 [INFO] Online as: Tatiana#0890
+2026-03-16 09:29:37,605 [INFO] Slash commands synced to guild: 1083433370815582240
+2026-03-16 09:29:39,962 [INFO] [ACTION] JOIN with [1417380658992513064] by climaxim
+2026-03-16 09:29:40,513 [INFO] [SOLITARY] Bot is alone. Starting 300s countdown.
+2026-03-16 09:30:51,865 [INFO] Online as: Tatiana#0890
+2026-03-16 09:30:55,732 [INFO] Slash commands synced to guild: 1083433370815582240
+2026-03-16 09:30:57,894 [INFO] [ACTION] JOIN with [1417380658992513064] by climaxim
+2026-03-16 09:30:58,477 [INFO] [SOLITARY] Bot is alone. Starting 300s countdown.
+2026-03-16 09:31:40,905 [INFO] [ACTION] ADD_EXT_LINK with [Black Sun Empire] by climaxim
+2026-03-16 09:31:40,916 [INFO] [QUEUE] New link added: Black Sun Empire
+2026-03-16 09:31:40,917 [WARNING] [RESOLVER] Failed to resolve link: Black Sun Empire
+2026-03-16 09:31:54,101 [INFO] [SEARCH] User climaxim searched for: Black Sun Empire
+2026-03-16 09:31:56,400 [INFO] [SEARCH] Found 20 results for: Black Sun Empire
+2026-03-16 09:31:59,089 [INFO] [ACTION] ADD_EXT_LINK with [https://www.youtube.com/watch?v=naEi0PC5ces] by climaxim
+2026-03-16 09:31:59,091 [INFO] [QUEUE] New link added: https://www.youtube.com/watch?v=naEi0PC5ces
+2026-03-16 09:32:01,459 [INFO] [RESOLVER] Successfully resolved: DnB Portal - Black Sun Empire - Beats for Love 2025 I Drum & Bass
+2026-03-16 09:32:03,239 [INFO] [PLAYER] Started playing: DnB Portal - Black Sun Empire - Beats for Love 2025 I Drum & Bass (3662s)
+2026-03-16 09:33:22,680 [INFO] [PLAYER] Track finished normally: Black Sun Empire - Beats for Love 2025 I Drum & Bass
+2026-03-16 09:33:27,429 [INFO] Online as: Tatiana#0890
+2026-03-16 09:33:29,361 [INFO] Slash commands synced to guild: 1083433370815582240
+2026-03-16 09:33:36,988 [INFO] [ACTION] JOIN with [1417380658992513064] by climaxim
+2026-03-16 09:33:37,542 [INFO] [SOLITARY] Bot is alone. Starting 300s countdown.
+2026-03-16 09:38:33,212 [INFO] Online as: Tatiana#0890
+2026-03-16 09:38:35,213 [INFO] Slash commands synced to guild: 1083433370815582240
+2026-03-16 09:38:43,460 [INFO] [ACTION] JOIN with [1417380658992513064] by climaxim
+2026-03-16 09:38:44,012 [INFO] [SOLITARY] Bot is alone. Starting 300s countdown.
+2026-03-16 09:43:46,724 [INFO] Auto-disconnecting: Bot was alone for 300s.
+2026-03-16 09:43:46,726 [INFO] [ACTION] DISCONNECT
+2026-03-16 09:43:47,729 [INFO] [SOLITARY] Bot is alone. Starting 300s countdown.
+2026-03-16 09:43:47,732 [INFO] Auto-disconnecting: Dynamic idle timeout (5 mins).
+2026-03-16 09:43:47,732 [INFO] [ACTION] DISCONNECT
+2026-03-16 09:45:32,977 [INFO] Online as: Tatiana#0890
+2026-03-16 09:45:34,844 [INFO] Slash commands synced to guild: 1083433370815582240
+2026-03-16 09:45:40,574 [INFO] [ACTION] JOIN with [1417380658992513064] by climaxim
+2026-03-16 09:45:41,135 [INFO] [SOLITARY] Bot is alone. Starting 300s countdown.
+2026-03-16 09:45:51,638 [INFO] [SEARCH] User climaxim searched for: Blakc Sun Empire
+2026-03-16 09:45:53,877 [INFO] [SEARCH] Found 20 results for: Blakc Sun Empire
+2026-03-16 09:45:59,077 [INFO] [ACTION] ADD_EXT_LINK with [https://www.youtube.com/watch?v=hgOzpEO47ZI] by climaxim
+2026-03-16 09:45:59,078 [INFO] [QUEUE] New link added: https://www.youtube.com/watch?v=hgOzpEO47ZI
+2026-03-16 09:46:01,268 [INFO] [RESOLVER] Successfully resolved: blacksunempire - Black Sun Empire Podcast 21 HQ [Official Black Sun Empire Channel]
+2026-03-16 09:46:03,159 [INFO] [PLAYER] Started playing: blacksunempire - Black Sun Empire Podcast 21 HQ [Official Black Sun Empire Channel] (3679s)
+2026-03-16 09:46:10,950 [INFO] [ACTION] PAUSE by climaxim
+2026-03-16 09:46:10,951 [INFO] [PLAYER] Pausing playback.
+2026-03-16 09:46:13,677 [INFO] [ACTION] REPLAY by climaxim
+2026-03-16 09:46:13,678 [INFO] [PLAYER] Resuming playback.
+2026-03-16 09:46:16,268 [INFO] [ACTION] STOP by climaxim
+2026-03-16 09:46:16,269 [INFO] [PLAYER] Stopping playback.
+2026-03-16 09:46:17,170 [INFO] [PLAYER] Track finished normally: Black Sun Empire Podcast 21 HQ [Official Black Sun Empire Channel]
+2026-03-16 09:46:19,509 [INFO] [ACTION] REPLAY by climaxim
+2026-03-16 09:46:19,519 [INFO] [PLAYER] Started playing: blacksunempire - Black Sun Empire Podcast 21 HQ [Official Black Sun Empire Channel] (3679s)
+2026-03-16 09:46:51,788 [INFO] [ACTION] STOP by climaxim
+2026-03-16 09:46:51,789 [INFO] [PLAYER] Stopping playback.
+2026-03-16 09:46:52,815 [INFO] [PLAYER] Track finished normally: Black Sun Empire Podcast 21 HQ [Official Black Sun Empire Channel]
+2026-03-16 09:46:53,542 [INFO] [ACTION] STOP by climaxim
+2026-03-16 09:46:59,757 [INFO] [ACTION] REPLAY by climaxim
+2026-03-16 09:46:59,760 [INFO] [PLAYER] Started playing: blacksunempire - Black Sun Empire Podcast 21 HQ [Official Black Sun Empire Channel] (3679s)
+2026-03-16 09:48:16,881 [INFO] [PLAYER] Track finished normally: Black Sun Empire Podcast 21 HQ [Official Black Sun Empire Channel]
+2026-03-16 09:48:24,493 [INFO] Online as: Tatiana#0890
+2026-03-16 09:48:26,166 [INFO] Slash commands synced to guild: 1083433370815582240
+2026-03-16 09:48:31,518 [INFO] [ACTION] JOIN with [1417380658992513064] by climaxim
+2026-03-16 09:48:32,060 [INFO] [SOLITARY] Bot is alone. Starting 300s countdown.
+2026-03-16 09:53:35,053 [INFO] Auto-disconnecting: Bot was alone for 300s.
+2026-03-16 09:53:35,053 [INFO] [ACTION] DISCONNECT
+2026-03-16 09:53:36,058 [INFO] [SOLITARY] Bot is alone. Starting 300s countdown.
+2026-03-16 09:53:36,060 [INFO] Auto-disconnecting: Dynamic idle timeout (5 mins).
+2026-03-16 09:53:36,060 [INFO] [ACTION] DISCONNECT
+2026-03-16 09:53:50,652 [INFO] Online as: Tatiana#0890
+2026-03-16 09:53:52,033 [INFO] Slash commands synced to guild: 1083433370815582240
+2026-03-16 09:53:55,643 [INFO] [ACTION] JOIN with [1417380658992513064] by climaxim
+2026-03-16 09:53:56,233 [INFO] [SOLITARY] Bot is alone. Starting 300s countdown.
+2026-03-16 09:54:16,018 [INFO] [SEARCH] User climaxim searched for: black sun empire
+2026-03-16 09:54:18,240 [INFO] [SEARCH] Found 20 results for: black sun empire
+2026-03-16 09:54:24,905 [INFO] [ACTION] ADD_EXT_LINK with [https://www.youtube.com/watch?v=bAhabqiaL50] by climaxim
+2026-03-16 09:54:24,908 [INFO] [QUEUE] New link added: https://www.youtube.com/watch?v=bAhabqiaL50
+2026-03-16 09:54:26,880 [INFO] [RESOLVER] Successfully resolved: blacksunempire - Black Sun Empire feat. Foreign Beggars - Dawn of a Dark Day  [Official Black Sun Empire Channel]
+2026-03-16 09:54:28,682 [INFO] [PLAYER] Started playing: blacksunempire - Black Sun Empire feat. Foreign Beggars - Dawn of a Dark Day  [Official Black Sun Empire Channel] (339s)
+2026-03-16 09:54:29,190 [INFO] [ACTION] ADD_EXT_LINK with [https://www.youtube.com/watch?v=uvgwkFnk1Pw] by climaxim
+2026-03-16 09:54:33,576 [INFO] [QUEUE] New link added: https://www.youtube.com/watch?v=uvgwkFnk1Pw
+2026-03-16 09:54:35,668 [INFO] [RESOLVER] Successfully resolved: DnB Portal - Black Sun Empire - Beats for Love 2022 | Drum and Bass
+2026-03-16 09:54:45,250 [INFO] [ACTION] SKIP by climaxim
+2026-03-16 09:54:45,251 [INFO] [PLAYER] Skipping current track.
+2026-03-16 09:54:45,252 [INFO] [PLAYER] Monitor loop broke before track finished: Black Sun Empire feat. Foreign Beggars - Dawn of a Dark Day  [Official Black Sun Empire Channel]
+2026-03-16 09:54:45,782 [INFO] [PLAYER] Started playing: DnB Portal - Black Sun Empire - Beats for Love 2022 | Drum and Bass (5801s)
+2026-03-16 09:54:57,331 [INFO] [ACTION] BACK by climaxim
+2026-03-16 09:54:57,334 [INFO] [PLAYER] Moving back to previous track.
+2026-03-16 09:54:57,334 [INFO] [PLAYER] Monitor loop broke before track finished: Black Sun Empire - Beats for Love 2022 | Drum and Bass
+2026-03-16 09:54:57,863 [INFO] [PLAYER] Started playing: blacksunempire - Black Sun Empire feat. Foreign Beggars - Dawn of a Dark Day  [Official Black Sun Empire Channel] (339s)
+2026-03-16 09:55:02,382 [INFO] [ACTION] SKIP by climaxim
+2026-03-16 09:55:02,383 [INFO] [PLAYER] Skipping current track.
+2026-03-16 09:55:02,384 [INFO] [PLAYER] Monitor loop broke before track finished: Black Sun Empire feat. Foreign Beggars - Dawn of a Dark Day  [Official Black Sun Empire Channel]
+2026-03-16 09:55:02,924 [INFO] [PLAYER] Started playing: DnB Portal - Black Sun Empire - Beats for Love 2022 | Drum and Bass (5801s)
+2026-03-16 09:55:06,534 [INFO] [ACTION] PAUSE by climaxim
+2026-03-16 09:55:06,535 [INFO] [PLAYER] Pausing playback.
+2026-03-16 09:55:11,979 [INFO] [ACTION] SEEK with [240] by climaxim
+2026-03-16 09:55:11,981 [INFO] [PLAYER] Seeking to: 240s
+2026-03-16 09:55:11,982 [INFO] [PLAYER] Monitor loop broke before track finished: Black Sun Empire - Beats for Love 2022 | Drum and Bass
+2026-03-16 09:58:57,860 [INFO] Auto-disconnecting: Bot was alone for 300s.
+2026-03-16 09:58:57,861 [INFO] [ACTION] DISCONNECT
+2026-03-16 09:58:58,868 [INFO] [SOLITARY] Bot is alone. Starting 300s countdown.
+2026-03-16 10:01:44,498 [INFO] [ACTION] JOIN with [1417380658992513064] by climaxim
+2026-03-16 10:04:02,264 [INFO] Auto-disconnecting: Bot was alone for 300s.
+2026-03-16 10:04:02,264 [INFO] [ACTION] DISCONNECT
+2026-03-16 10:04:03,272 [INFO] [SOLITARY] Bot is alone. Starting 300s countdown.
+2026-03-16 10:18:43,257 [INFO] Online as: Tatiana#0890
+2026-03-16 10:18:44,688 [INFO] Slash commands synced to guild: 1083433370815582240

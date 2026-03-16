@@ -1,0 +1,56 @@
+{
+    "guild_id": "1083433370815582240",
+    "radio_text_channel_id": "1482994023298760894",
+    "auto_join_channel_id": "0",
+    "afk_channel_id": "1275929869703970876",
+    "admin_role_id": 0,
+    "sysadmin_role_id": 0,
+    "default_genre": "ONLINE",
+    "default_language": "hu",
+    "default_ui_mode": "full",
+    "default_presence": "Waiting for links...",
+    "ffmpeg_path": "ffmpeg",
+    "ytdlp_path": "yt-dlp",
+    "languages": [
+        {
+            "code": "en",
+            "label": "English",
+            "emoji": "🇬🇧"
+        },
+        {
+            "code": "hu",
+            "label": "Magyar",
+            "emoji": "🇭🇺"
+        }
+    ],
+    "ui_settings": {
+        "search_items_per_page": 5,
+        "queue_items_per_page": 5,
+        "player_upcoming_limit": 5,
+        "progress_bar_width": 18,
+        "thumbnail_size": 40,
+        "max_title_len": 45,
+        "max_uploader_len": 35,
+        "theme": {
+            "primary": "0x2b2d31",
+            "secondary": "0x2b2d31",
+            "success": "0x57F287",
+            "warning": "0xFEE75C",
+            "danger": "0xED4245",
+            "playing": "0x1c6bff",
+            "paused": "0xFEE75C",
+            "stopped": "0xED4245",
+            "background": "0x2b2d31",
+            "accent": "0xEB459E"
+        }
+    },
+    "timings": {
+        "embed_refresh_minutes": 58,
+        "progress_update_seconds": 15,
+        "error_retry_seconds": 5,
+        "afk_timeout_seconds": 300
+    },
+    "defaults": {
+        "volume": 0.5
+    }
+}

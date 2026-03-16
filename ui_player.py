@@ -4,8 +4,9 @@ from discord.ui import Modal, TextInput, LayoutView, ActionRow, Container, Secti
 from ui_translate import t
 from ui_icons import Icons
 from ui_base import handle_ui_error, BaseView
-from ui_utils import fixed, format_duration, get_dominant_color
+from ui_utils import format_duration, get_dominant_color
 from radio_actions import RadioAction, RadioState as RadioStatusEnum
+from core.models import Song
 from ui_theme import Theme
 
 _update_callback = None
@@ -64,7 +65,7 @@ class LanguageSelect(discord.ui.Select):
         if not interaction.response.is_done():
             await interaction.response.defer(ephemeral=True)
         if _update_callback:
-            await _update_callback(self.radio.current_song or {})
+            await _update_callback(self.radio.current_song)
 
 class DisconnectButton(discord.ui.Button):
     def __init__(self, radio):
@@ -259,6 +260,47 @@ class VolumeModal(Modal):
             await interaction.response.send_message(t("invalid_number"), ephemeral=True)
 
 
+class FavoriteToggleButton(discord.ui.Button):
+    def __init__(self, radio, song: Song | None):
+        # We start with HEART_PLUS / fav_add_label by default as a "Call to Action"
+        # Since it's a shared view, we don't know which user's state to show until click.
+        super().__init__(
+            label=None if radio.is_compact else t('fav_add_label'),
+            emoji=Icons.HEART_PLUS,
+            style=discord.ButtonStyle.secondary,
+            custom_id="player:favorite_toggle",
+            disabled=(not song or song.is_resolving)
+        )
+        self.radio = radio
+        self.song = song
+
+    @handle_ui_error
+    async def callback(self, interaction: discord.Interaction):
+        if not self.song:
+            return
+            
+        added = self.radio.fav_manager.toggle_favorite(interaction.user.id, self.song)
+        
+        # Update button state FOR THE NEXT ACTION
+        # If just added, the button should now show "Remove"
+        # If just removed, the button should now show "Favorite" (Add)
+        self.emoji = Icons.HEART_MINUS if added else Icons.HEART_PLUS
+        
+        if not self.radio.is_compact:
+            self.label = t('fav_remove_label') if added else t('fav_add_label')
+        
+        icon = Icons.HEART_PLUS if added else Icons.HEART_MINUS # Message icon
+        msg = t("added_to_fav") if added else t("removed_from_fav")
+        
+        await interaction.response.send_message(f"{icon} {msg}", ephemeral=True)
+        
+        # Edit the message to reflect the new button state
+        try:
+            await interaction.message.edit(view=self.view)
+        except Exception:
+            pass
+
+
 class UIStyleSelect(discord.ui.Select):
     def __init__(self, radio, custom_id="uistyle_select"):
         self.radio = radio
@@ -281,7 +323,7 @@ class UIStyleSelect(discord.ui.Select):
         if not interaction.response.is_done():
             await interaction.response.defer(ephemeral=True)
         if _update_callback:
-            await _update_callback(self.radio.current_song or {})
+            await _update_callback(self.radio.current_song)
 
 class WelcomeLayout(BaseView):
     """
@@ -322,6 +364,13 @@ class WelcomeLayout(BaseView):
             row_style = ActionRow()
             row_style.add_item(UIStyleSelect(radio, custom_id="welcome:uistyle_select"))
             header.add_item(row_style)
+            
+            # Library Button
+            from ui_search import LibraryButton, HistoryButton
+            row_lib = ActionRow()
+            row_lib.add_item(LibraryButton(radio, custom_id="welcome:library_button"))
+            row_lib.add_item(HistoryButton(radio, custom_id="welcome:history_button"))
+            header.add_item(row_lib)
 
         self.add_item(header)
         
@@ -358,17 +407,20 @@ class FrequencyStationView(BaseView):
             row_style.add_item(UIStyleSelect(radio, custom_id="station:uistyle_select"))
             main.add_item(row_style)
             
-            # row 4: Management row (Disconnect at the very bottom)
+            # row 4: Management row
             mgmt_row = ActionRow()
+            from ui_search import LibraryButton, HistoryButton, HistoryButton
+            mgmt_row.add_item(LibraryButton(radio, custom_id="station:library_button"))
+            mgmt_row.add_item(HistoryButton(radio, custom_id="station:history_button"))
             mgmt_row.add_item(DisconnectButton(radio))
             main.add_item(mgmt_row)
             
         self.add_item(main)
 
 class NowPlayingView(BaseView):
-    def __init__(self, radio, song=None):
+    def __init__(self, radio, song: Song | None = None):
         super().__init__(radio)
-        song = song or radio.current_song or {}
+        song = song or radio.current_song
         
         # Color logic based on status
         if radio.status == RadioStatusEnum.PLAYING:
@@ -393,18 +445,18 @@ class NowPlayingView(BaseView):
         def truncate(text, max_len):
             return (text[:max_len-3] + '...') if len(text) > max_len else text
 
-        title = song.get("title", t("unknown"))
-        uploader = song.get("uploader") or song.get("artist") or t("unknown")
+        title = song.title if song else t("unknown")
+        uploader = (song.uploader if song else None) or t("unknown")
         
         # Truncate for consistent UI width using config values
         truncated_title = truncate(title, radio.config.max_title_len)
         truncated_uploader = truncate(uploader, radio.config.max_uploader_len)
 
-        source = song.get("source")
-        if not source and song.get("webpage_url"):
-            if "youtube.com" in song["webpage_url"] or "youtu.be" in song["webpage_url"]:
+        source = song.source if song else None
+        if not source and song and song.webpage_url:
+            if "youtube.com" in song.webpage_url or "youtu.be" in song.webpage_url:
                 source = "YouTube"
-            elif "soundcloud.com" in song["webpage_url"]:
+            elif "soundcloud.com" in song.webpage_url:
                 source = "SoundCloud"
         
         # Rich info for both modes (only buttons change)
@@ -419,7 +471,7 @@ class NowPlayingView(BaseView):
             current_status_icon = Icons.IDLE
 
         title_display = truncated_title
-        web_url = song.get("webpage_url")
+        web_url = song.webpage_url if song else None
         if web_url:
             title_display = f"[{truncated_title}]({web_url})"
 
@@ -433,9 +485,8 @@ class NowPlayingView(BaseView):
         
         elapsed = int(radio.track_start_offset)
         if radio.track_start_time and radio.status == RadioStatusEnum.PLAYING:
-            import asyncio
             elapsed += int(asyncio.get_event_loop().time() - radio.track_start_time)
-        duration = song.get('duration', 0)
+        duration = song.duration if song else 0
         bar_width = radio.config.progress_bar_width
         def create_progress_bar(current, total, width=None):
             width = width or bar_width
@@ -478,7 +529,7 @@ class NowPlayingView(BaseView):
             info_lines.append(f"\n{t('tuned_by')} {radio.last_user.mention}{channel_name}")
 
         thumb = None
-        thumb_url = song.get("thumbnail_url")
+        thumb_url = song.thumbnail_url if song else None
         # If idle and no song thumbnail, use bot avatar
         if not thumb_url and radio.status == RadioStatusEnum.IDLE and _bot_ref:
             thumb_url = str(_bot_ref.user.display_avatar.url)
@@ -501,6 +552,7 @@ class NowPlayingView(BaseView):
         row1.add_item(PlayPauseButton(radio))
         row1.add_item(StopButton(radio))
         row1.add_item(ForwardButton(radio))
+        row1.add_item(FavoriteToggleButton(radio, song))
         master.add_item(row1)
         
         row2 = ActionRow()
@@ -510,6 +562,8 @@ class NowPlayingView(BaseView):
         row2.add_item(WebLinkButton(radio, custom_id="player:weblink_button"))
         row2.add_item(QueueViewButton(radio))
         master.add_item(row2)
+        
+        # row3 containing LibraryButton removed as requested
         
         # Finally, add the master (now containing everything) to the view
         self.add_item(master)

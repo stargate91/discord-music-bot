@@ -2,6 +2,7 @@ import asyncio
 import discord
 from ui_translate import t, init_translate
 from radio_actions import RadioState as RadioStatusEnum
+from core.models import Song
 from ui_player import WelcomeLayout, FrequencyStationView, NowPlayingView, init_player_ui
 from ui_search import FullQueueView
 from ui_utils import safe_delete_message, safe_fetch_message, get_dominant_color
@@ -18,16 +19,19 @@ class UIManager:
         init_translate(radio)
         init_player_ui(bot, config, self.update_now_playing)
 
-    async def update_now_playing(self, song: dict | None):
+    async def update_now_playing(self, song: Song | None):
         """Public entry point for UI updates with locking."""
         async with self._ui_lock:
             await self._update_ui_internal(song)
 
-    async def _update_ui_internal(self, song: dict | None):
+    async def _update_ui_internal(self, song: Song | None):
         """Internal UI rendering logic."""
         try:
-            if song is None: song = {}
-            has_no_song = not song or not song.get("path")
+            # Handle potential dict fallback from older code
+            if isinstance(song, dict):
+                song = None
+                
+            has_no_song = song is None or not song.path
             
             if not self.bot or self.bot.is_closed(): return
             
@@ -51,14 +55,27 @@ class UIManager:
         except Exception as e:
             log.error(f"UIManager update failed: {e}")
 
-    async def _update_presence(self, song: dict):
+    async def _update_presence(self, song: Song | None):
         try:
             if self.radio.status == RadioStatusEnum.PLAYING and song:
-                activity = discord.Game(name=f"{t('presence_listening')} {song.get('title', t('unknown'))}")
+                # Use native Listening activity so Discord handles the "Listening to" prefix automatically
+                activity = discord.Activity(
+                    type=discord.ActivityType.listening,
+                    name=song.title or t('unknown')
+                )
                 await self.bot.change_presence(activity=activity)
             else:
-                await self.bot.change_presence(activity=None)
-        except: pass
+                # Elegant messages for Tatiana when not playing
+                if self.radio.status == RadioStatusEnum.PAUSED:
+                    msg = t('holding_rhythm')
+                elif self.radio.status == RadioStatusEnum.IDLE:
+                    msg = t('waiting_melody')
+                else: # STOPPED or other
+                    msg = t('at_command')
+                
+                await self.bot.change_presence(activity=discord.Game(name=msg))
+        except Exception as e:
+            log.debug(f"Presence update failed: {e}")
 
     async def _cleanup_stray_messages(self, channel):
         try:
@@ -137,8 +154,8 @@ class UIManager:
             
             self.radio.now_playing_message = None
             self.radio.station_message = None
-            await self._update_ui_internal(self.radio.current_song or {})
+            await self._update_ui_internal(self.radio.current_song)
 
     async def refresh_all_uis(self):
         """Triggers a lock-safe update of the current UI state."""
-        await self.update_now_playing(self.radio.current_song or {})
+        await self.update_now_playing(self.radio.current_song)

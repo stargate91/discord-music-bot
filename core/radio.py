@@ -4,6 +4,10 @@ from typing import List, Dict, Optional, Any, Callable
 from radio_actions import RadioState as RadioStatusEnum, RadioAction
 from embed_state import EmbedStateManager
 from providers import get_providers, resolve_any, resolve_playlist_any
+from core.models import Song
+from core.favorites import FavoriteManager
+from core.history import HistoryManager
+from ui_theme import Theme
 from logger import log
 
 class RadioManager:
@@ -15,6 +19,11 @@ class RadioManager:
         self.config = config
         self.embed_manager = EmbedStateManager()
         self.providers = get_providers(config)
+        self.fav_manager = FavoriteManager()
+        self.history_manager = HistoryManager()
+        
+        # Initialize Theme
+        Theme.init_theme(config)
         
         # Connection State
         self.voice: Optional[discord.VoiceClient] = None
@@ -22,21 +31,17 @@ class RadioManager:
         
         # Playback State
         self.status = RadioStatusEnum.IDLE
-        self.current_song: Optional[Dict[str, Any]] = None
-        self.queue: List[Dict[str, Any]] = []
-        self.history: List[Dict[str, Any]] = []
+        self.current_song: Optional[Song] = None
+        self.queue: List[Song] = []
+        self.history = self.history_manager.history
         self.volume: float = config.default_volume
         self.station_message: Optional[discord.Message] = None
         self.now_playing_message: Optional[discord.Message] = None
         
-        # Search / External Link state
-        self.is_resolving_link: bool = False
-        
-        # UI State (Moved here from RadioState)
+        # UI State
         self.language: str = config.default_language
         self.is_compact: bool = (config.default_ui_mode == "compact")
         self.show_queue: bool = False
-        self.active_view_type: Optional[str] = None
         
         # Progress Tracking
         self.track_start_time: Optional[float] = None
@@ -66,22 +71,19 @@ class RadioManager:
         is_playlist = any(p.matches(url) and p.is_playlist(url) for p in self.providers)
         
         if is_playlist:
-            # For playlists, we start a background task immediately without a generic placeholder
             log.info(f"[QUEUE] Playlist detected, starting batch resolution: {url}")
             asyncio.create_task(self._resolve_playlist_task(url))
-            return None # Don't return a single song object
+            return None
             
-        # Create a placeholder for single track
+        # Create a placeholder for single track using Song dataclass
         title_placeholder = url.split('?')[0].split('/')[-1] or url
-        song = {
-            "title": title_placeholder, 
-            "artist": "...",
-            "path": url,
-            "is_external": True,
-            "is_resolving": True,
-            "duration": 0,
-            "thumbnail_url": None
-        }
+        song = Song(
+            title=title_placeholder,
+            path=url,
+            uploader="...",
+            is_external=True,
+            is_resolving=True
+        )
         self.queue.append(song)
         log.info(f"[QUEUE] New link added: {url}")
         
@@ -90,29 +92,29 @@ class RadioManager:
         return song
 
     async def _resolve_playlist_task(self, url: str):
-        tracks = await resolve_playlist_any(url, self.providers)
-        if tracks:
-            log.info(f"[RESOLVER] Playlist resolved: {len(tracks)} tracks found.")
-            # Add all tracks to queue
-            for track in tracks:
-                track["is_resolving"] = False # They come resolved from flat-playlist
-                self.queue.append(track)
+        tracks_data = await resolve_playlist_any(url, self.providers)
+        if tracks_data:
+            log.info(f"[RESOLVER] Playlist resolved: {len(tracks_data)} tracks found.")
+            for data in tracks_data:
+                song = Song.from_dict(data)
+                song.is_resolving = False
+                self.queue.append(song)
             
             if self.on_state_change:
                 await self.on_state_change(self.current_song)
         else:
             log.warning(f"[RESOLVER] Failed to resolve playlist: {url}")
 
-    async def _resolve_link_task(self, song: Dict[str, Any]):
-        resolved = await resolve_any(song["path"], self.providers)
+    async def _resolve_link_task(self, song: Song):
+        resolved = await resolve_any(song.path, self.providers)
         if resolved:
             song.update(resolved)
-            log.info(f"[RESOLVER] Successfully resolved: {song['artist']} - {song['title']}")
+            log.info(f"[RESOLVER] Successfully resolved: {song.artist} - {song.title}")
         else:
-            song["title"] = f"⚠️ Could not resolve: {song['path']}"
-            log.warning(f"[RESOLVER] Failed to resolve link: {song['path']}")
+            song.title = f"⚠️ Could not resolve: {song.path}"
+            log.warning(f"[RESOLVER] Failed to resolve link: {song.path}")
         
-        song["is_resolving"] = False
+        song.is_resolving = False
         if self.on_state_change:
             await self.on_state_change(self.current_song)
 

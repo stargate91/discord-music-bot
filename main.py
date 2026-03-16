@@ -48,7 +48,7 @@ async def main():
             await asyncio.sleep(config.progress_update_seconds)
             if radio.status == RadioStatusEnum.PLAYING and radio.now_playing_message:
                 try:
-                    await ui_manager.update_now_playing(radio.current_song or {})
+                    await ui_manager.update_now_playing(radio.current_song)
                 except:
                     pass
 
@@ -110,13 +110,13 @@ async def main():
                 if not old_channel or old_channel.id != target_channel.id:
                     radio.voice_channel_id = target_channel.id
                     radio.voice = member.guild.voice_client
-                    await ui_manager.update_now_playing(radio.current_song or {})
+                    await ui_manager.update_now_playing(radio.current_song)
             elif old_channel:
                 radio.voice_channel_id = None
                 radio.voice = None
                 radio.status = RadioStatusEnum.IDLE
                 radio.current_song = None
-                await ui_manager.update_now_playing({})
+                await ui_manager.update_now_playing(None)
 
     @bot.event
     async def on_message(message: discord.Message):

@@ -2,6 +2,7 @@ import asyncio
 import discord
 from typing import Optional, Callable, Dict, Any
 from radio_actions import RadioAction, RadioState as RadioStatusEnum
+from core.models import Song
 from core.radio import RadioManager
 from logger import log
 
@@ -140,12 +141,10 @@ class RadioPlayer:
                 await self.refresh_ui()
             elif action == RadioAction.REPLAY:
                 # IMPORTANT: If we are STOPPED but have a current_song, we want to play it, not skip to next.
-                # Setting is_seeking=True prevents the rotation logic in _start_playback.
                 if self.radio.status == RadioStatusEnum.STOPPED and self.radio.current_song:
                     self.radio.is_seeking = True
                     self.radio.seek_position = 0
                 elif self.radio.status == RadioStatusEnum.PAUSED and self.radio.current_song:
-                    # If monitor loop broke, restart at the paused position
                     self.radio.is_seeking = True
                     self.radio.seek_position = self.radio.track_start_offset
             elif action == RadioAction.SEEK:
@@ -176,8 +175,7 @@ class RadioPlayer:
         # 1. Skip if seeking/no song
         if not self.radio.current_song or not self.radio.is_seeking:
             if self.radio.current_song and not self.radio.is_seeking:
-                self.radio.history.insert(0, self.radio.current_song)
-                if len(self.radio.history) > 50: self.radio.history.pop()
+                self.radio.history_manager.add(self.radio.current_song)
                 
             if self.radio.queue:
                 self.radio.current_song = self.radio.queue.pop(0)
@@ -186,7 +184,7 @@ class RadioPlayer:
                 self.radio.status = RadioStatusEnum.IDLE
                 self.radio.current_song = None
                 self.radio.is_seeking = False
-                await self.update_ui({})
+                await self.update_ui(None)
                 return
         
         song = self.radio.current_song
@@ -207,40 +205,49 @@ class RadioPlayer:
         done = asyncio.Event()
         def after_playing(error):
             if error:
-                log.error(f"[PLAYER] Playback error: {error}")
+                # Suppress "read of closed file" error which is common noise when stopping/skipping FFmpeg
+                err_msg = str(error)
+                if "read of closed file" not in err_msg.lower():
+                    log.error(f"[PLAYER] Playback error: {error}")
+                else:
+                    log.debug(f"[PLAYER] Suppressed noise: {err_msg}")
             self.bot.loop.call_soon_threadsafe(done.set)
 
         while voice.is_playing() or voice.is_paused():
             await asyncio.sleep(0.1)
         
         voice.play(audio_source, after=after_playing)
-        log.info(f"[PLAYER] Started playing: {song['artist']} - {song['title']} ({song.get('duration', 0)}s)")
+        log.info(f"[PLAYER] Started playing: {song.uploader} - {song.title} ({song.duration}s)")
         await self.update_ui(song)
 
         # 4. Interactive loop during playback
         await self._playback_monitor_loop(voice, song, done)
         
-        # 5. Cleanup track state
-        if not done.is_set():
-            log.info(f"[PLAYER] Monitor loop broke before track finished: {song['title']}")
+        # 5. Safety: Wait for the voice player thread to fully exit before cleaning up
+        # This prevents the "read of closed file" error during SKIP/STOP/SEEK
+        await done.wait()
+
+        # 6. Cleanup track state
+        if not done.is_set(): # This part is now technically redundant due to await above but kept for logic
+            log.info(f"[PLAYER] Monitor loop broke before track finished: {song.title}")
         else:
-            log.info(f"[PLAYER] Track finished normally: {song['title']}")
+            log.info(f"[PLAYER] Track finished normally: {song.title}")
 
         self.radio.track_start_time = None
         self.radio.track_start_offset = 0.0
         audio_source.cleanup()
 
-    async def _resolve_source(self, song: Dict[str, Any]) -> Optional[str]:
-        source_path = song["path"]
-        if song.get("is_external"):
-            if not song.get("stream_url") or song.get("is_resolving"):
+    async def _resolve_source(self, song: Song) -> Optional[str]:
+        source_path = song.path
+        if song.is_external:
+            if not song.stream_url or song.is_resolving:
                 await self.update_ui(song)
                 from providers import resolve_any
                 resolved = await resolve_any(source_path, self.radio.providers)
                 if resolved: song.update(resolved)
             
-            if song.get("stream_url"):
-                return song["stream_url"]
+            if song.stream_url:
+                return song.stream_url
             return None
         return source_path
 

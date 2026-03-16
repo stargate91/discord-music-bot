@@ -60,7 +60,7 @@ class YTDLPProvider(MusicProvider):
                 
             return {
                 "title": info.get("title", "Unknown Title"),
-                "artist": info.get("uploader", info.get("artist", "Unknown Artist")),
+                "uploader": info.get("uploader") or info.get("channel") or info.get("artist") or "Unknown Artist",
                 "album": info.get("extractor_key", "Web Stream"),
                 "duration": int(info.get("duration", 0)),
                 "stream_url": stream_url,
@@ -103,7 +103,7 @@ class YTDLPProvider(MusicProvider):
                     info = json.loads(line)
                     results.append({
                         "title": info.get("title", "Unknown Title"),
-                        "artist": info.get("uploader", info.get("artist", "Unknown Artist")),
+                        "uploader": info.get("uploader") or info.get("channel") or info.get("artist") or "Unknown Artist",
                         "duration": int(info.get("duration", 0)),
                         "path": info.get("url") or info.get("webpage_url"),
                         "thumbnail_url": info.get("thumbnail"),
@@ -144,7 +144,7 @@ class YTDLPProvider(MusicProvider):
                         info = json.loads(line)
                         results.append({
                             "title": info.get("title", "Unknown"),
-                            "artist": info.get("uploader", "Unknown"),
+                            "uploader": info.get("uploader") or info.get("channel") or "Unknown",
                             "duration": int(info.get("duration", 0)),
                             "path": info.get("url") or info.get("webpage_url"),
                             "thumbnail_url": info.get("thumbnail"),

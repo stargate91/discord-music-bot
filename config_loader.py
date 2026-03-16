@@ -14,7 +14,6 @@ class Config:
     sysadmin_role_id: int
     default_language: str
     default_ui_mode: str
-    default_presence: str
     ffmpeg_path: str
     ytdlp_path: str
     languages: list
@@ -76,7 +75,6 @@ def load_config():
         sysadmin_role_id=int(data.get("sysadmin_role_id", 0)),
         default_language=data.get("default_language", "hu"),
         default_ui_mode=data.get("default_ui_mode", "full"),
-        default_presence=data.get("default_presence", "Waiting for links..."),
         ffmpeg_path=data.get("ffmpeg_path", "ffmpeg"),
         ytdlp_path=data.get("ytdlp_path", "yt-dlp"),
         languages=data.get("languages", []),

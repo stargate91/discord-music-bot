@@ -49,6 +49,9 @@ class Icons:
     LANGUAGE = discord.PartialEmoji.from_str("<:globe:1479722340320542820>")
     RADIO = discord.PartialEmoji.from_str("<:audiolines:1478347583934955540>")
     STAR = discord.PartialEmoji.from_str("<:tag:1478347206355456031>") # Tag for star fallback
+    HEART_PLUS = discord.PartialEmoji.from_str("<:heartplus:1478958134981820496>")
+    HEART_MINUS = discord.PartialEmoji.from_str("<:heartminus:1478958133526270143>")
+    FOLDER_HEART = discord.PartialEmoji.from_str("<:folderheart:1478959293867757618>")
 
     # Custom Progress Bar Icons
     PB_START = discord.PartialEmoji.from_str("<:pbleftfullstart:1479349705011105915>")

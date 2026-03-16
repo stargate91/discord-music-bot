@@ -334,7 +334,7 @@ class HistoryButton(discord.ui.Button):
 class HistoryView(PaginatedView):
     def __init__(self, radio, page=0):
         # The history list from the radio
-        history = [Song.from_dict(r) if isinstance(r, dict) else r for r in reversed(radio.history)]
+        history = [Song.from_dict(r) if isinstance(r, dict) else r for r in radio.history]
         super().__init__(radio, history, items_per_page=5, page=page)
         self.radio = radio
         

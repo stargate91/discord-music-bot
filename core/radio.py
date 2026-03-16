@@ -109,7 +109,7 @@ class RadioManager:
         resolved = await resolve_any(song.path, self.providers)
         if resolved:
             song.update(resolved)
-            log.info(f"[RESOLVER] Successfully resolved: {song.artist} - {song.title}")
+            log.info(f"[RESOLVER] Successfully resolved: {song.uploader} - {song.title}")
         else:
             song.title = f"⚠️ Could not resolve: {song.path}"
             log.warning(f"[RESOLVER] Failed to resolve link: {song.path}")

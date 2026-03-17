@@ -105,7 +105,7 @@ def setup_commands(tree: app_commands.CommandTree, radio):
         radio.dispatch(RadioAction.SEEK, total_seconds, user=interaction.user)
         await interaction.response.send_message(f"{t('jumping')} {time}", ephemeral=True)
 
-    @tree.command(name="queue", description="Várakozási lista megtekintése")
+    @tree.command(name="queue", description="Várólista megtekintése")
     async def queue(interaction: discord.Interaction):
         from ui_search import FullQueueView
         view = FullQueueView(radio, page=0)

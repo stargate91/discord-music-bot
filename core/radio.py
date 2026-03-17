@@ -4,9 +4,10 @@ from typing import List, Dict, Optional, Any, Callable
 from radio_actions import RadioState as RadioStatusEnum, RadioAction
 from embed_state import EmbedStateManager
 from providers import get_providers, resolve_any, resolve_playlist_any
-from core.models import Song
-from core.favorites import FavoriteManager
-from core.history import HistoryManager
+from .models import Song
+from .favorites import FavoriteManager
+from .history import HistoryManager
+from .database import MetadataCache
 from ui_theme import Theme
 from logger import log
 
@@ -21,6 +22,7 @@ class RadioManager:
         self.providers = get_providers(config)
         self.fav_manager = FavoriteManager()
         self.history_manager = HistoryManager()
+        self.metadata_cache = MetadataCache()
         
         # Initialize Theme
         Theme.init_theme(config)
@@ -33,7 +35,6 @@ class RadioManager:
         self.status = RadioStatusEnum.IDLE
         self.current_song: Optional[Song] = None
         self.queue: List[Song] = []
-        self.history = self.history_manager.history
         self.volume: float = config.default_volume
         self.station_message: Optional[discord.Message] = None
         self.now_playing_message: Optional[discord.Message] = None
@@ -57,6 +58,10 @@ class RadioManager:
         # Callbacks (to be set by UI/Player)
         self.on_state_change: Optional[Callable] = None
 
+    @property
+    def history(self) -> List[Song]:
+        return self.history_manager.history
+
     def dispatch(self, action: RadioAction, data: Any = None, user: Optional[discord.Member | discord.User] = None):
         """Dispatches an action to the player engine."""
         user_str = f" by {user.name}" if user else ""
@@ -75,15 +80,27 @@ class RadioManager:
             asyncio.create_task(self._resolve_playlist_task(url))
             return None
             
-        # Create a placeholder for single track using Song dataclass
-        title_placeholder = url.split('?')[0].split('/')[-1] or url
-        song = Song(
-            title=title_placeholder,
-            path=url,
-            uploader="...",
-            is_external=True,
-            is_resolving=True
-        )
+        from ui_translate import t
+        
+        # Check cache first
+        cached = self.metadata_cache.get(url)
+        if cached:
+            song = Song.from_dict(cached)
+            song.path = url # Ensure original URL is used for resolution
+            song.is_resolving = True
+            song.is_external = True
+            log.info(f"[CACHE] Hit for: {url}")
+        else:
+            # Create a placeholder for single track using Song dataclass
+            song = Song(
+                title=t("resolving_link"),
+                path=url,
+                uploader="...",
+                duration=0,
+                is_external=True,
+                is_resolving=True
+            )
+        
         self.queue.append(song)
         log.info(f"[QUEUE] New link added: {url}")
         
@@ -99,6 +116,15 @@ class RadioManager:
                 song = Song.from_dict(data)
                 song.is_resolving = False
                 self.queue.append(song)
+                
+                # Cache individual tracks from playlist
+                self.metadata_cache.set(
+                    url=song.path,
+                    title=song.title,
+                    uploader=song.uploader or "Unknown",
+                    duration=song.duration,
+                    thumbnail_url=song.thumbnail_url or ""
+                )
             
             if self.on_state_change:
                 await self.on_state_change(self.current_song)
@@ -109,6 +135,14 @@ class RadioManager:
         resolved = await resolve_any(song.path, self.providers)
         if resolved:
             song.update(resolved)
+            # Save to cache
+            self.metadata_cache.set(
+                url=song.path, # Use original link or webpage_url? webpage_url is better if available
+                title=song.title,
+                uploader=song.uploader or "Unknown",
+                duration=song.duration,
+                thumbnail_url=song.thumbnail_url or ""
+            )
             log.info(f"[RESOLVER] Successfully resolved: {song.uploader} - {song.title}")
         else:
             song.title = f"⚠️ Could not resolve: {song.path}"

@@ -38,6 +38,8 @@ class Config:
     @property
     def max_title_len(self): return self.ui_settings.get("max_title_len", 45)
     @property
+    def list_max_title_len(self): return self.ui_settings.get("list_max_title_len", 60)
+    @property
     def max_uploader_len(self): return self.ui_settings.get("max_uploader_len", 35)
 
 def load_config():

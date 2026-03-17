@@ -34,7 +34,8 @@ class HistoryManager:
                         "duration": song.duration,
                         "thumbnail_url": song.thumbnail_url,
                         "is_external": song.is_external,
-                        "played_at": song.played_at
+                        "played_at": song.played_at,
+                        "requested_by": song.requested_by
                     })
                 json.dump(data, f, indent=4, ensure_ascii=False)
         except Exception as e:
@@ -59,3 +60,8 @@ class HistoryManager:
 
     def get_all(self) -> List[Song]:
         return self.history
+
+    def clear(self):
+        """Removes all items from history."""
+        self.history = []
+        self._save()

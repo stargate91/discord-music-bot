@@ -67,3 +67,10 @@ class FavoriteManager:
         if user_id_str not in self.favorites:
             return []
         return [Song.from_dict(fav) for fav in self.favorites[user_id_str]]
+
+    def clear_favorites(self, user_id: str):
+        """Removes all favorites for a specific user."""
+        user_id_str = str(user_id)
+        if user_id_str in self.favorites:
+            self.favorites[user_id_str] = []
+            self._save()

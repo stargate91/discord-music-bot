@@ -97,7 +97,7 @@ class SearchModal(Modal):
             return
 
         log.info(f"[SEARCH] Found {len(results)} results for: {query}")
-        view = SearchResultsView(self.radio, results)
+        view = SearchResultsView(self.radio, results, query=query, user=interaction.user)
         await interaction.followup.send(view=view, ephemeral=True)
         await safe_delete_message(msg)
 
@@ -145,14 +145,24 @@ class FavoriteListButton(discord.ui.Button):
         await interaction.followup.send(f"{icon} {msg}", ephemeral=True)
 
 class SearchResultsView(PaginatedView):
-    def __init__(self, radio, results, page=0):
+    def __init__(self, radio, results, query=None, user=None, page=0):
         # Safety conversion for legacy dict results
         results = [Song.from_dict(r) if isinstance(r, dict) else r for r in results]
-        super().__init__(radio, results, items_per_page=5, page=page)
+        super().__init__(radio, results, items_per_page=8, page=page)
         self.results = results
+        self.query = query
+        self.user = user
         
         container = Container(accent_color=Theme.PRIMARY)
-        container.add_item(TextDisplay(f"### {Icons.SEARCH} {t('search_results_title')}"))
+        
+        # Build header with query and user
+        header_text = f"### {Icons.SEARCH} {t('search_results_title')}"
+        if query:
+            header_text += f" - *\"{query}\"*"
+        if user:
+            header_text += f" ({user.name})"
+            
+        container.add_item(TextDisplay(header_text))
         container.add_item(Separator())
         
         def truncate(text, max_len):
@@ -160,10 +170,9 @@ class SearchResultsView(PaginatedView):
 
         items = self.get_page_items()
         for i, res in enumerate(items, self.current_page * self.items_per_page + 1):
-            t_uploader = truncate(res.uploader or t('unknown'), radio.config.max_uploader_len)
-            t_title = truncate(res.title or t('unknown'), radio.config.max_title_len)
+            t_title = truncate(res.title or t('unknown'), radio.config.list_max_title_len)
             
-            info = f"**{i}. {t_uploader} - {t_title}** (`{format_duration(res.duration)}`)"
+            info = f"**{i}. {t_title}** ({format_duration(res.duration)})"
             container.add_item(TextDisplay(info))
             
             row = ActionRow()
@@ -193,7 +202,7 @@ class SearchResultsView(PaginatedView):
             await self.refresh_view(interaction)
         next.callback = next_cb
         
-        close = discord.ui.Button(emoji=Icons.CLOSE, style=discord.ButtonStyle.secondary)
+        close = discord.ui.Button(emoji=Icons.CLOSE, style=discord.ButtonStyle.danger)
         @handle_ui_error
         async def close_cb(interaction):
             await interaction.response.defer()
@@ -208,7 +217,13 @@ class SearchResultsView(PaginatedView):
         self.add_item(container)
 
     async def refresh_view(self, interaction):
-        new_view = SearchResultsView(self.radio, self.results, page=self.current_page)
+        new_view = SearchResultsView(
+            self.radio, 
+            self.results, 
+            query=self.query, 
+            user=self.user, 
+            page=self.current_page
+        )
         await interaction.edit_original_response(view=new_view)
 
 class LibraryButton(discord.ui.Button):
@@ -265,10 +280,9 @@ class FavoritesView(PaginatedView):
 
             items = self.get_page_items()
             for i, song in enumerate(items, self.current_page * self.items_per_page + 1):
-                t_uploader = truncate(song.uploader or t('unknown'), radio.config.max_uploader_len)
-                t_title = truncate(song.title or t('unknown'), radio.config.max_title_len)
+                t_title = truncate(song.title or t('unknown'), radio.config.list_max_title_len)
                 
-                info = f"**{i}. {t_uploader} - {t_title}** (`{format_duration(song.duration)}`)"
+                info = f"**{i}. {t_title}** ({format_duration(song.duration)})"
                 container.add_item(TextDisplay(info))
                 
                 row = ActionRow()
@@ -298,7 +312,7 @@ class FavoritesView(PaginatedView):
             await self.refresh_view(interaction)
         next.callback = next_cb
         
-        close = discord.ui.Button(emoji=Icons.CLOSE, style=discord.ButtonStyle.secondary)
+        close = discord.ui.Button(emoji=Icons.CLOSE, style=discord.ButtonStyle.danger)
         @handle_ui_error
         async def close_cb(interaction):
             await interaction.response.defer()
@@ -307,6 +321,11 @@ class FavoritesView(PaginatedView):
 
         nav.add_item(prev)
         nav.add_item(next)
+        
+        if favs:
+            nav.add_item(AddAllFavoritesButton(radio, favs))
+            nav.add_item(ClearFavoritesButton(radio, self.user_id))
+
         nav.add_item(close)
         container.add_item(nav)
         
@@ -315,6 +334,49 @@ class FavoritesView(PaginatedView):
     async def refresh_view(self, interaction):
         new_view = FavoritesView(self.radio, self.user_id, page=self.current_page)
         await interaction.edit_original_response(view=new_view)
+
+class AddAllFavoritesButton(discord.ui.Button):
+    def __init__(self, radio, songs):
+        super().__init__(
+            label=t("add_all_to_queue"),
+            emoji=Icons.QUEUE,
+            style=discord.ButtonStyle.secondary
+        )
+        self.radio = radio
+        self.songs = songs
+
+    @handle_ui_error
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        for song in self.songs:
+            # Create a clean copy without internal state for the queue
+            q_song = Song.from_dict(song.to_dict())
+            q_song.requested_by = interaction.user.name
+            self.radio.queue.append(q_song)
+            
+        await interaction.followup.send(f"{Icons.QUEUE} {t('added_all_to_queue')}", ephemeral=True)
+
+class ClearFavoritesButton(discord.ui.Button):
+    def __init__(self, radio, user_id):
+        super().__init__(
+            label=t("clear_favorites"),
+            emoji=Icons.SWEEP,
+            style=discord.ButtonStyle.secondary
+        )
+        self.radio = radio
+        self.user_id = user_id
+
+    @handle_ui_error
+    async def callback(self, interaction: discord.Interaction):
+        self.radio.fav_manager.clear_favorites(self.user_id)
+        
+        await interaction.response.defer()
+        if hasattr(self.view, 'refresh_view'):
+            self.view.current_page = 0
+            self.view.data_list = []
+            await self.view.refresh_view(interaction)
+            
+        await interaction.followup.send(f"{Icons.SWEEP} {t('cleared_favorites')}", ephemeral=True)
 
 class HistoryButton(discord.ui.Button):
     def __init__(self, radio, custom_id="history_button"):
@@ -328,15 +390,16 @@ class HistoryButton(discord.ui.Button):
 
     @handle_ui_error
     async def callback(self, interaction: discord.Interaction):
-        view = HistoryView(self.radio)
+        view = HistoryView(self.radio, user=interaction.user)
         await interaction.response.send_message(view=view, ephemeral=True)
 
 class HistoryView(PaginatedView):
-    def __init__(self, radio, page=0):
+    def __init__(self, radio, page=0, user=None):
         # The history list from the radio
         history = [Song.from_dict(r) if isinstance(r, dict) else r for r in radio.history]
-        super().__init__(radio, history, items_per_page=5, page=page)
+        super().__init__(radio, history, items_per_page=8, page=page)
         self.radio = radio
+        self.user = user
         
         container = Container(accent_color=Theme.PRIMARY)
         container.add_item(TextDisplay(f"### {Icons.HISTORY} {t('history_label')}"))
@@ -350,11 +413,11 @@ class HistoryView(PaginatedView):
 
             items = self.get_page_items()
             for i, song in enumerate(items, self.current_page * self.items_per_page + 1):
-                t_artist = truncate(song.uploader or t('unknown'), radio.config.max_uploader_len)
-                t_title = truncate(song.title or t('unknown'), radio.config.max_title_len)
+                t_title = truncate(song.title or t('unknown'), radio.config.list_max_title_len)
+                t_user = song.requested_by or t('unknown')
+                t_played = song.played_at or ""
                 
-                t_time = f" • *{song.played_at}*" if song.played_at else ""
-                info = f"**{i}. {t_artist} - {t_title}** (`{format_duration(song.duration)}`){t_time}"
+                info = f"**{i}. {t_title}** ({format_duration(song.duration)})\n*{t_played} - {t_user}*"
                 container.add_item(TextDisplay(info))
                 
                 row = ActionRow()
@@ -384,7 +447,7 @@ class HistoryView(PaginatedView):
             await self.refresh_view(interaction)
         next.callback = next_cb
         
-        close = discord.ui.Button(emoji=Icons.CLOSE, style=discord.ButtonStyle.secondary)
+        close = discord.ui.Button(emoji=Icons.CLOSE, style=discord.ButtonStyle.danger)
         @handle_ui_error
         async def close_cb(interaction):
             await interaction.response.defer()
@@ -393,14 +456,48 @@ class HistoryView(PaginatedView):
 
         nav.add_item(prev)
         nav.add_item(next)
+        
+        # Admin only: Clear History
+        if user and radio.is_admin(user):
+            nav.add_item(ClearHistoryButton(radio))
+
         nav.add_item(close)
         container.add_item(nav)
         
         self.add_item(container)
 
     async def refresh_view(self, interaction):
-        new_view = HistoryView(self.radio, page=self.current_page)
+        new_view = HistoryView(self.radio, page=self.current_page, user=self.user)
         await interaction.edit_original_response(view=new_view)
+
+class ClearHistoryButton(discord.ui.Button):
+    def __init__(self, radio):
+        super().__init__(
+            label=t("clear_history_label"), 
+            emoji=Icons.SWEEP, 
+            style=discord.ButtonStyle.secondary
+        )
+        self.radio = radio
+
+    @handle_ui_error
+    async def callback(self, interaction: discord.Interaction):
+        # Additional check in callback for safety
+        if not self.radio.is_admin(interaction.user):
+            await interaction.response.send_message(t("admin_only"), ephemeral=True)
+            return
+
+        # Simple confirmation check would be nice, but for now direct clear
+        self.radio.history_manager.clear()
+        
+        await interaction.response.defer()
+        if hasattr(self.view, 'refresh_view'):
+            # Reset to page 0 since history is gone
+            self.view.current_page = 0
+            # History will be empty now
+            self.view.data_list = []
+            await self.view.refresh_view(interaction)
+        
+        await interaction.followup.send(f"{Icons.SWEEP} History cleared!", ephemeral=True)
 
 class QueueViewButton(discord.ui.Button):
     def __init__(self, radio):
@@ -480,9 +577,8 @@ class FullQueueView(PaginatedView):
     def __init__(self, radio, page=0):
         # Force all items to be Song objects if they are dicts
         queue = [Song.from_dict(r) if isinstance(r, dict) else r for r in radio.queue]
-        # 4 tracks per page: Each track uses 1 Text + 1 Row (with 3 buttons) = 4 items? 
-        # Actually safer to stick to 4 to avoid the 40 limit which seems to count nested items too.
-        super().__init__(radio, queue, items_per_page=4, page=page)
+        # 6 tracks per page: Each track uses 1 Text + 1 Row (with 4 buttons)
+        super().__init__(radio, queue, items_per_page=6, page=page)
         container = Container(accent_color=Theme.PRIMARY)
         container.add_item(TextDisplay(f"### {Icons.QUEUE} {t('queue_label')}"))
         container.add_item(Separator())
@@ -499,9 +595,9 @@ class FullQueueView(PaginatedView):
                 raw_title = song.title or t('unknown')
                 
                 t_name = truncate(raw_name, radio.config.max_uploader_len)
-                t_title = truncate(raw_title, radio.config.max_title_len)
+                t_title = truncate(raw_title, radio.config.list_max_title_len)
                 
-                song_info = f"**{i}.** {t_name} - {t_title}"
+                song_info = f"**{i}. {t_title}**\n{t_name} ({format_duration(song.duration)})"
                 
                 # Add text info first
                 container.add_item(TextDisplay(song_info))
@@ -537,7 +633,7 @@ class FullQueueView(PaginatedView):
             await self.refresh_view(interaction)
         next.callback = next_cb
         
-        close = discord.ui.Button(emoji=Icons.CLOSE, style=discord.ButtonStyle.secondary)
+        close = discord.ui.Button(emoji=Icons.CLOSE, style=discord.ButtonStyle.danger)
         @handle_ui_error
         async def close_cb(interaction):
             await interaction.response.defer()

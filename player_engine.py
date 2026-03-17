@@ -90,6 +90,8 @@ class RadioPlayer:
                 await self.radio.add_external_link(data)
                 self.radio.status = RadioStatusEnum.PLAYING
                 await self.refresh_ui()
+            elif action == RadioAction.DISCONNECT:
+                await self._disconnect(None)
         except asyncio.TimeoutError:
             pass
         except Exception as e:

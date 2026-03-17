@@ -107,5 +107,12 @@
     "search_placeholder": "Artist, Song Title...",
     "holding_rhythm": "Holding the rhythm for you...",
     "waiting_melody": "Waiting for your melody...",
-    "at_command": "At your command."
+    "at_command": "At your command.",
+    "resolving_link": "[Processing Link...]",
+    "clear_history_label": "Clear History",
+    "clear_history_confirm": "Are you sure you want to clear all playback history?",
+    "add_all_to_queue": "Add all to queue",
+    "clear_favorites": "Clear favorites",
+    "added_all_to_queue": "Added all favorites to queue!",
+    "cleared_favorites": "Cleared all favorites!"
 }

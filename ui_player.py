@@ -154,7 +154,7 @@ class BackButton(discord.ui.Button):
             emoji=Icons.BACK,
             style=discord.ButtonStyle.secondary,
             custom_id="back_button",
-            disabled=(not radio.history)
+            disabled=(not radio.history) or (radio.status == RadioStatusEnum.IDLE and not radio.queue)
         )
         self.radio = radio
 

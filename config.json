@@ -28,6 +28,7 @@
         "progress_bar_width": 18,
         "thumbnail_size": 40,
         "max_title_len": 45,
+        "list_max_title_len": 50,
         "max_uploader_len": 35,
         "theme": {
             "primary": "0x2b2d31",

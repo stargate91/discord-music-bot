@@ -20,9 +20,9 @@ Hi! This is a Discord radio bot project I'm working on. It's built with Python a
    ```
 2. **FFmpeg**: You need to have `ffmpeg` installed on your system because it's what plays the music.
 3. **Setup Environment**:
-   - Create a `.env` file.
+   - Create a `configs/.env` file (see `.env.example` as a template).
    - Add your `DISCORD_TOKEN`.
-4. **Config**: Check the `config.json` for things like `guild_id` and `radio_text_channel_id`.
+4. **Config**: Check `configs/config.json` for things like `guild_id` and `radio_text_channel_id`.
 5. **Run**:
    ```bash
    python main.py
@@ -32,6 +32,7 @@ Hi! This is a Discord radio bot project I'm working on. It's built with Python a
 
 I tried to keep things organized:
 - `main.py`: The starting point of the bot.
+- `configs/`: **NEW!** All your configuration (`config.json`) and environment (`.env`) files go here.
 - `player_engine.py`: This is the "brain" that handles FFmpeg and the voice client.
 - `core/`: Has the `RadioManager` which keeps track of the state.
 - `ui_...py`: A bunch of files for different parts of the UI (player, search, translate, etc.).

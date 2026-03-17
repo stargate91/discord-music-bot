@@ -1,5 +1,6 @@
 import logging
 import sys
+import os
 from colorama import init, Fore, Style
 
 init(autoreset=True)
@@ -21,8 +22,15 @@ class ColoredFormatter(logging.Formatter):
 log = logging.getLogger("RadioBot")
 log.setLevel(logging.INFO)
 
+# Ensure data directory exists
+os.makedirs("data", exist_ok=True)
+
+# Support multiple instances via environment variable
+instance_name = os.getenv("INSTANCE_NAME", "")
+log_filename = f"data/{instance_name}_radio.log" if instance_name else "data/radio.log"
+
 # File Handler
-file_handler = logging.FileHandler("radio.log", encoding="utf-8")
+file_handler = logging.FileHandler(log_filename, encoding="utf-8")
 file_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
 log.addHandler(file_handler)
 

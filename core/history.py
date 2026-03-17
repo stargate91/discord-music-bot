@@ -1,67 +1,35 @@
-import json
-import os
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import List
 from core.models import Song
+from core.database import Database
 
 class HistoryManager:
-    def __init__(self, storage_path: str = "history.json", max_size: int = 50):
-        self.storage_path = storage_path
+    def __init__(self, db: Database, max_size: int = 50):
+        self.db = db
         self.max_size = max_size
-        self.history: List[Song] = self._load()
-
-    def _load(self) -> List[Song]:
-        if not os.path.exists(self.storage_path):
-            return []
-        try:
-            with open(self.storage_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                if isinstance(data, list):
-                    return [Song.from_dict(d) for d in data if isinstance(d, dict)]
-                return []
-        except Exception:
-            return []
-
-    def _save(self):
-        try:
-            with open(self.storage_path, "w", encoding="utf-8") as f:
-                data = []
-                for song in self.history:
-                    data.append({
-                        "title": song.title,
-                        "path": song.path,
-                        "uploader": song.uploader,
-                        "duration": song.duration,
-                        "thumbnail_url": song.thumbnail_url,
-                        "is_external": song.is_external,
-                        "played_at": song.played_at,
-                        "requested_by": song.requested_by
-                    })
-                json.dump(data, f, indent=4, ensure_ascii=False)
-        except Exception as e:
-            from logger import log
-            log.error(f"Error saving history: {e}")
+        # No local 'history' list, we fetch from DB when needed to keep it synced
+        # But for performance in view we can still keep it cache if we want
+        # However, the user wants 'everything in .db', so let's rely on DB.
 
     def add(self, song: Song):
         if not song or not song.path:
             return
             
-        # Set timestamp
-        song.played_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # Set timestamp if not set
+        if not song.played_at:
+            song.played_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        # Add to beginning
-        self.history.insert(0, song)
-        
-        # Keep size limit
-        if len(self.history) > self.max_size:
-            self.history = self.history[:self.max_size]
-            
-        self._save()
+        self.db.add_history(song, max_size=self.max_size)
 
     def get_all(self) -> List[Song]:
-        return self.history
+        """Returns the last items from the DB."""
+        return self.db.get_history(limit=self.max_size)
 
     def clear(self):
         """Removes all items from history."""
-        self.history = []
-        self._save()
+        self.db.clear_history()
+
+    @property
+    def history(self) -> List[Song]:
+        """Legacy access for compatibility with existing UI."""
+        return self.get_all()

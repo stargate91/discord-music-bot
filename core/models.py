@@ -11,6 +11,7 @@ class Song:
     webpage_url: Optional[str] = None
     source: Optional[str] = None
     requested_by: Optional[str] = None  # Mention string or name
+    user_id: Optional[str] = None       # Snowflake ID for stats
     played_at: Optional[str] = None     # Timestamp when it was played
     
     # Internal state

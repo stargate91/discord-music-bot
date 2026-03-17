@@ -409,7 +409,7 @@ class FrequencyStationView(BaseView):
             
             # row 4: Management row
             mgmt_row = ActionRow()
-            from ui_search import LibraryButton, HistoryButton, HistoryButton
+            from ui_search import LibraryButton, HistoryButton
             mgmt_row.add_item(LibraryButton(radio, custom_id="station:library_button"))
             mgmt_row.add_item(HistoryButton(radio, custom_id="station:history_button"))
             mgmt_row.add_item(DisconnectButton(radio))

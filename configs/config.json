@@ -1,8 +1,8 @@
 {
-    "guild_id": 0,
-    "radio_text_channel_id": 0,
+    "guild_id": 1083433370815582240,
+    "radio_text_channel_id": 1482994023298760894,
     "auto_join_channel_id": 0,
-    "afk_channel_id": 0,
+    "afk_channel_id": 1275929869703970876,
     "admin_role_id": 0,
     "sysadmin_role_id": 0,
     "default_language": "hu",
@@ -28,7 +28,7 @@
         "progress_bar_width": 18,
         "thumbnail_size": 40,
         "max_title_len": 45,
-        "list_max_title_len": 50,
+        "list_max_title_len": 120,
         "max_uploader_len": 35,
         "theme": {
             "primary": "0x2b2d31",

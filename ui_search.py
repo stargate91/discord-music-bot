@@ -97,6 +97,17 @@ class SearchModal(Modal):
             return
 
         log.info(f"[SEARCH] Found {len(results)} results for: {query}")
+        
+        # Best Practice: Auto-populate the cache with search results
+        for song in results:
+            self.radio.db.set_cache(
+                url=song.path,
+                title=song.title,
+                uploader=song.uploader or "Unknown",
+                duration=song.duration,
+                thumbnail_url=song.thumbnail_url or ""
+            )
+            
         view = SearchResultsView(self.radio, results, query=query, user=interaction.user)
         await interaction.followup.send(view=view, ephemeral=True)
         await safe_delete_message(msg)
@@ -148,7 +159,7 @@ class SearchResultsView(PaginatedView):
     def __init__(self, radio, results, query=None, user=None, page=0):
         # Safety conversion for legacy dict results
         results = [Song.from_dict(r) if isinstance(r, dict) else r for r in results]
-        super().__init__(radio, results, items_per_page=8, page=page)
+        super().__init__(radio, results, items_per_page=7, page=page)
         self.results = results
         self.query = query
         self.user = user
@@ -265,7 +276,7 @@ class FavoriteRemoveButton(discord.ui.Button):
 class FavoritesView(PaginatedView):
     def __init__(self, radio, user_id, page=0):
         favs = radio.fav_manager.get_favorites(user_id)
-        super().__init__(radio, favs, items_per_page=5, page=page)
+        super().__init__(radio, favs, items_per_page=7, page=page)
         self.user_id = user_id
         
         container = Container(accent_color=Theme.PRIMARY)
@@ -397,7 +408,7 @@ class HistoryView(PaginatedView):
     def __init__(self, radio, page=0, user=None):
         # The history list from the radio
         history = [Song.from_dict(r) if isinstance(r, dict) else r for r in radio.history]
-        super().__init__(radio, history, items_per_page=8, page=page)
+        super().__init__(radio, history, items_per_page=7, page=page)
         self.radio = radio
         self.user = user
         

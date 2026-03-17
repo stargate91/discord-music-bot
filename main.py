@@ -1,5 +1,20 @@
 import asyncio
 import discord
+import sys
+import os
+import argparse
+
+# 1. Parse instance arguments before importing project modules
+parser = argparse.ArgumentParser(description="Discord Radio Bot Instance")
+parser.add_argument("instance", nargs="?", default="", help="Name of this bot instance (e.g. bot1)")
+parser.add_argument("--config", help="Specific config file path")
+args = parser.parse_args()
+
+# 2. Set environment variable for logger/state discovery
+if args.instance:
+    os.environ["INSTANCE_NAME"] = args.instance
+
+# 3. Import project modules after setting environment
 from discord import app_commands
 from config_loader import load_config
 from ui import UIManager
@@ -12,7 +27,14 @@ from commands import setup_commands
 from ui_translate import t
 
 async def main():
-    config = load_config()
+    # Determine config file name
+    config_file = args.config if args.config else (f"config_{args.instance}.json" if args.instance else "config.json")
+    
+    try:
+        config = load_config(config_file, instance_name=args.instance)
+    except FileNotFoundError:
+        print(f"Error: Configuration file '{config_file}' not found.")
+        sys.exit(1)
     
     intents = discord.Intents.default()
     intents.message_content = True

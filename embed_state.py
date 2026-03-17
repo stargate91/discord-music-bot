@@ -2,8 +2,15 @@ import json
 import os
 
 class EmbedStateManager:
-    def __init__(self, filename="embed_state.json"):
-        self.path = os.path.join(os.path.dirname(__file__), filename)
+    def __init__(self, filename=None):
+        instance_name = os.getenv("INSTANCE_NAME", "")
+        if filename is None:
+            filename = f"data/{instance_name}_embed_state.json" if instance_name else "data/embed_state.json"
+            
+        # We use absolute path relative to the root if needed, or relative to current dir
+        self.path = os.path.abspath(filename)
+        # Ensure the directory exists
+        os.makedirs(os.path.dirname(self.path), exist_ok=True)
         self.state = self._load()
 
     def _load(self):

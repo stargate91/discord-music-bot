@@ -7,7 +7,7 @@ from providers import get_providers, resolve_any, resolve_playlist_any
 from .models import Song
 from .favorites import FavoriteManager
 from .history import HistoryManager
-from .database import MetadataCache
+from .database import Database
 from ui_theme import Theme
 from logger import log
 
@@ -20,9 +20,12 @@ class RadioManager:
         self.config = config
         self.embed_manager = EmbedStateManager()
         self.providers = get_providers(config)
-        self.fav_manager = FavoriteManager()
-        self.history_manager = HistoryManager()
-        self.metadata_cache = MetadataCache()
+        
+        # Central Database
+        self.db = Database("data/radio.db")
+        
+        self.fav_manager = FavoriteManager(self.db)
+        self.history_manager = HistoryManager(self.db)
         
         # Initialize Theme
         Theme.init_theme(config)
@@ -70,20 +73,20 @@ class RadioManager:
         if user:
             self.last_user = user
         self.action_queue.put_nowait((action, data))
-    async def add_external_link(self, url: str):
+    async def add_external_link(self, url: str, user: Optional[discord.Member | discord.User] = None):
         """Adds an external link or playlist to the queue."""
         # Check if it's a playlist
         is_playlist = any(p.matches(url) and p.is_playlist(url) for p in self.providers)
         
         if is_playlist:
             log.info(f"[QUEUE] Playlist detected, starting batch resolution: {url}")
-            asyncio.create_task(self._resolve_playlist_task(url))
+            asyncio.create_task(self._resolve_playlist_task(url, user))
             return None
             
         from ui_translate import t
         
         # Check cache first
-        cached = self.metadata_cache.get(url)
+        cached = self.db.get_cache(url)
         if cached:
             song = Song.from_dict(cached)
             song.path = url # Ensure original URL is used for resolution
@@ -101,6 +104,10 @@ class RadioManager:
                 is_resolving=True
             )
         
+        if user:
+            song.user_id = str(user.id)
+            song.requested_by = user.display_name
+            
         self.queue.append(song)
         log.info(f"[QUEUE] New link added: {url}")
         
@@ -108,17 +115,20 @@ class RadioManager:
         asyncio.create_task(self._resolve_link_task(song))
         return song
 
-    async def _resolve_playlist_task(self, url: str):
+    async def _resolve_playlist_task(self, url: str, user: Optional[discord.Member | discord.User] = None):
         tracks_data = await resolve_playlist_any(url, self.providers)
         if tracks_data:
             log.info(f"[RESOLVER] Playlist resolved: {len(tracks_data)} tracks found.")
             for data in tracks_data:
                 song = Song.from_dict(data)
                 song.is_resolving = False
+                if user:
+                    song.user_id = str(user.id)
+                    song.requested_by = user.display_name
                 self.queue.append(song)
                 
                 # Cache individual tracks from playlist
-                self.metadata_cache.set(
+                self.db.set_cache(
                     url=song.path,
                     title=song.title,
                     uploader=song.uploader or "Unknown",
@@ -136,7 +146,7 @@ class RadioManager:
         if resolved:
             song.update(resolved)
             # Save to cache
-            self.metadata_cache.set(
+            self.db.set_cache(
                 url=song.path, # Use original link or webpage_url? webpage_url is better if available
                 title=song.title,
                 uploader=song.uploader or "Unknown",

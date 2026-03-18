@@ -27,6 +27,11 @@ def handle_ui_error(func):
                     await interaction.response.send_message(f"{Icons.WARNING} {msg}", ephemeral=True)
                 else:
                     await interaction.followup.send(f"{Icons.WARNING} {msg}", ephemeral=True)
+                
+                # Auto-delete error notification
+                from ui_utils import delayed_delete
+                import asyncio
+                asyncio.create_task(delayed_delete(interaction, radio.config.notification_timeout))
                 return
 
         try:

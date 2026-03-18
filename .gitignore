@@ -42,3 +42,5 @@ ENV/
 Thumbs.db
 "*.env" 
 "configs/*.env" 
+configs/1.env
+configs/2.env

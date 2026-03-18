@@ -52,6 +52,7 @@
         "action_timeout": 5.0,
         "view_timeout": 60,
         "command_delete_delay": 1.5,
+        "notification_timeout": 20.0,
         "ui_cleanup_frequency": 60,
         "message_cleanup_limit": 50,
         "player_loop_sleep": 0.5

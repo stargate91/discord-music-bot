@@ -168,6 +168,10 @@ async def main():
         if message.author.bot or not message.content:
             return
 
+        # Restricted to radio channel
+        if message.channel.id != config.radio_text_channel_id:
+            return
+
         prefix = config.command_prefix
         if not message.content.startswith(prefix):
             return
@@ -198,42 +202,48 @@ async def main():
 
             if command in ["play", "p"]:
                 if not message.author.voice:
-                    await message.channel.send(f"{message.author.mention} " + t("no_permission"), delete_after=5)
+                    await message.channel.send(f"{message.author.mention} " + t("no_permission"), delete_after=config.notification_timeout)
                 else:
                     query = " ".join(args).strip() if args else None
                     if not query:
                         if radio.status == RadioStatusEnum.PAUSED:
                             radio.dispatch(RadioAction.REPLAY, user=message.author)
                         else:
-                            await message.channel.send(f"{message.author.mention} " + t("nothing_playing"), delete_after=5)
+                            await message.channel.send(f"{message.author.mention} " + t("nothing_playing"), delete_after=config.notification_timeout)
                     else:
                         if radio.voice_channel_id is None:
                             radio.dispatch(RadioAction.JOIN, message.author.voice.channel.id, user=message.author)
                         radio.dispatch(RadioAction.ADD_EXT_LINK, query, user=message.author)
+                        await message.channel.send(f"{message.author.mention} " + t("weblink_added"), delete_after=config.notification_timeout)
 
             elif command == "stop":
                 radio.dispatch(RadioAction.STOP, user=message.author)
+                await message.channel.send(f"{message.author.mention} " + t("stopping"), delete_after=config.notification_timeout)
 
             elif command in ["disconnect", "leave", "d", "l"]:
                 radio.dispatch(RadioAction.DISCONNECT, user=message.author)
+                await message.channel.send(f"{message.author.mention} " + t("severing"), delete_after=config.notification_timeout)
 
             elif command in ["skip", "s"]:
                 if radio.queue:
                     radio.dispatch(RadioAction.SKIP, user=message.author)
+                    await message.channel.send(f"{message.author.mention} " + t("forwarding"), delete_after=config.notification_timeout)
                 else:
-                    await message.channel.send(f"{message.author.mention} " + t("no_next_track"), delete_after=5)
+                    await message.channel.send(f"{message.author.mention} " + t("no_next_track"), delete_after=config.notification_timeout)
 
             elif command in ["back", "b"]:
                 if radio.history:
                     radio.dispatch(RadioAction.BACK, user=message.author)
+                    await message.channel.send(f"{message.author.mention} " + t("back_label") + "...", delete_after=config.notification_timeout)
                 else:
-                    await message.channel.send(f"{message.author.mention} " + t("no_prev_track"), delete_after=5)
+                    await message.channel.send(f"{message.author.mention} " + t("no_prev_track"), delete_after=config.notification_timeout)
 
             elif command in ["join", "j"]:
                 if message.author.voice:
                     radio.dispatch(RadioAction.JOIN, message.author.voice.channel.id, user=message.author)
+                    await message.channel.send(f"{message.author.mention} " + f"{t('syncing')} ({message.author.voice.channel.name})", delete_after=config.notification_timeout)
                 else:
-                    await message.channel.send(f"{message.author.mention} " + t("no_permission"), delete_after=5)
+                    await message.channel.send(f"{message.author.mention} " + t("no_permission"), delete_after=config.notification_timeout)
 
             elif command in ["volume", "v"] and args:
                 try:
@@ -241,9 +251,9 @@ async def main():
                     if 0 <= vol <= 100:
                         radio.dispatch(RadioAction.SET_VOLUME, vol / 100, user=message.author)
                     else:
-                        await message.channel.send(f"{message.author.mention} " + t("vol_range_error"), delete_after=5)
+                        await message.channel.send(f"{message.author.mention} " + t("vol_range_error"), delete_after=config.notification_timeout)
                 except:
-                    await message.channel.send(f"{message.author.mention} " + t("invalid_number"), delete_after=5)
+                    await message.channel.send(f"{message.author.mention} " + t("invalid_number"), delete_after=config.notification_timeout)
 
             elif command in ["queue", "q"]:
                 from ui_search import FullQueueView
@@ -265,8 +275,9 @@ async def main():
                         else:
                             total = int(ts)
                         radio.dispatch(RadioAction.SEEK, total, user=message.author)
+                        await message.channel.send(f"{message.author.mention} " + f"{t('jumping')} {ts}", delete_after=config.notification_timeout)
                     except:
-                        await message.channel.send(f"{message.author.mention} " + t("format_error"), delete_after=5)
+                        await message.channel.send(f"{message.author.mention} " + t("format_error"), delete_after=config.notification_timeout)
                 else:
                     await message.channel.send(f"{message.author.mention} " + t("no_current_track"), delete_after=5)
             

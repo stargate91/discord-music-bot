@@ -71,6 +71,8 @@ class Config:
     @property
     def command_delete_delay(self): return self.timings.get("command_delete_delay", 1.5)
     @property
+    def notification_timeout(self): return self.timings.get("notification_timeout", 20.0)
+    @property
     def ui_cleanup_frequency(self): return self.timings.get("ui_cleanup_frequency", 60)
     @property
     def message_cleanup_limit(self): return self.timings.get("message_cleanup_limit", 50)

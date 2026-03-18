@@ -179,6 +179,8 @@ class SeekButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         if self.radio.status in [RadioStatusEnum.IDLE, RadioStatusEnum.STOPPED]:
             await interaction.response.send_message(t("cannot_seek_stopped"), ephemeral=True)
+            from ui_utils import delayed_delete
+            asyncio.create_task(delayed_delete(interaction, self.radio.config.notification_timeout))
             return
         modal = SeekModal(self.radio)
         await interaction.response.send_modal(modal)
@@ -208,10 +210,14 @@ class SeekModal(Modal):
                 total_seconds = int(ts)
         except:
             await interaction.response.send_message(t("format_error"), ephemeral=True)
+            from ui_utils import delayed_delete
+            asyncio.create_task(delayed_delete(interaction, self.radio.config.notification_timeout))
             return
         
         if not self.radio.current_song:
             await interaction.response.send_message(t("no_current_track"), ephemeral=True)
+            from ui_utils import delayed_delete
+            asyncio.create_task(delayed_delete(interaction, self.radio.config.notification_timeout))
             return
             
         self.radio.dispatch(RadioAction.SEEK, total_seconds, user=interaction.user)
@@ -256,8 +262,12 @@ class VolumeModal(Modal):
                     await interaction.response.defer()
             else:
                 await interaction.response.send_message(t("vol_range_error"), ephemeral=True)
+                from ui_utils import delayed_delete
+                asyncio.create_task(delayed_delete(interaction, self.radio.config.notification_timeout))
         except:
             await interaction.response.send_message(t("invalid_number"), ephemeral=True)
+            from ui_utils import delayed_delete
+            asyncio.create_task(delayed_delete(interaction, self.radio.config.notification_timeout))
 
 
 class FavoriteToggleButton(discord.ui.Button):
@@ -293,6 +303,8 @@ class FavoriteToggleButton(discord.ui.Button):
         msg = t("added_to_fav") if added else t("removed_from_fav")
         
         await interaction.response.send_message(f"{icon} {msg}", ephemeral=True)
+        from ui_utils import delayed_delete
+        asyncio.create_task(delayed_delete(interaction, self.radio.config.notification_timeout))
         
         # Edit the message to reflect the new button state
         try:
@@ -339,6 +351,8 @@ class HelpButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         view = HelpView(self.radio)
         await interaction.response.send_message(embed=view.get_embed(), ephemeral=True)
+        from ui_utils import delayed_delete
+        asyncio.create_task(delayed_delete(interaction, self.radio.config.notification_timeout))
 
 class HelpView:
     def __init__(self, radio):

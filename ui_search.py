@@ -123,6 +123,8 @@ class SearchResultAddButton(discord.ui.Button):
         await interaction.response.defer(ephemeral=True)
         self.radio.dispatch(RadioAction.ADD_EXT_LINK, self.result.path, user=interaction.user)
         await interaction.followup.send(t("weblink_added"), ephemeral=True)
+        from ui_utils import delayed_delete
+        asyncio.create_task(delayed_delete(interaction, self.radio.config.notification_timeout))
 
 class FavoriteListButton(discord.ui.Button):
     def __init__(self, radio, song: Song):
@@ -154,6 +156,8 @@ class FavoriteListButton(discord.ui.Button):
         icon = Icons.HEART_PLUS if added else Icons.HEART_MINUS
         msg = t("added_to_fav") if added else t("removed_from_fav")
         await interaction.followup.send(f"{icon} {msg}", ephemeral=True)
+        from ui_utils import delayed_delete
+        asyncio.create_task(delayed_delete(interaction, self.radio.config.notification_timeout))
 
 class SearchResultsView(PaginatedView):
     def __init__(self, radio, results, query=None, user=None, page=0):
@@ -272,6 +276,8 @@ class FavoriteRemoveButton(discord.ui.Button):
             
         # Optional: send a followup confirmation
         await interaction.followup.send(f"{Icons.REMOVE} {t('removed_from_fav')}", ephemeral=True)
+        from ui_utils import delayed_delete
+        asyncio.create_task(delayed_delete(interaction, self.radio.config.notification_timeout))
 
 class FavoritesView(PaginatedView):
     def __init__(self, radio, user_id, page=0):
@@ -358,14 +364,33 @@ class AddAllFavoritesButton(discord.ui.Button):
 
     @handle_ui_error
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.defer()
+        # Check permissions
+        if not self.radio.can_interact(interaction.user):
+            await interaction.response.send_message(t("not_in_same_voice"), ephemeral=True)
+            return
+
+        await interaction.response.defer(ephemeral=True)
+        
+        # Create clean copies without internal state for the queue
+        q_songs = []
         for song in self.songs:
-            # Create a clean copy without internal state for the queue
             q_song = Song.from_dict(song.to_dict())
-            q_song.requested_by = interaction.user.name
-            self.radio.queue.append(q_song)
+            q_song.requested_by = interaction.user.display_name
+            q_songs.append(q_song)
+        
+        # Ensure bot is in voice if we want it to start playing immediately
+        if self.radio.voice_channel_id is None:
+            if not interaction.user.voice:
+                await interaction.followup.send(t("no_permission"), ephemeral=True)
+                return
+            self.radio.dispatch(RadioAction.JOIN, interaction.user.voice.channel.id, user=interaction.user)
+
+        # Dispatch as action to wake up the engine if idle
+        self.radio.dispatch(RadioAction.ADD_SONGS, q_songs, user=interaction.user)
             
         await interaction.followup.send(f"{Icons.QUEUE} {t('added_all_to_queue')}", ephemeral=True)
+        from ui_utils import delayed_delete
+        asyncio.create_task(delayed_delete(interaction, self.radio.config.notification_timeout))
 
 class ClearFavoritesButton(discord.ui.Button):
     def __init__(self, radio, user_id):
@@ -388,6 +413,8 @@ class ClearFavoritesButton(discord.ui.Button):
             await self.view.refresh_view(interaction)
             
         await interaction.followup.send(f"{Icons.SWEEP} {t('cleared_favorites')}", ephemeral=True)
+        from ui_utils import delayed_delete
+        asyncio.create_task(delayed_delete(interaction, self.radio.config.notification_timeout))
 
 class HistoryButton(discord.ui.Button):
     def __init__(self, radio, custom_id="history_button"):

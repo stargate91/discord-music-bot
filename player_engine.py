@@ -38,8 +38,21 @@ class RadioPlayer:
         if guild.voice_client:
             self.radio.voice = guild.voice_client
             if self.radio.voice.channel.id != channel.id:
+                # Check if someone else is already there before moving
+                for member in channel.members:
+                    if member.bot and member.id != self.bot.user.id:
+                        log.info(f"[VOICE] Aborting move: Another bot ({member.name}) is already in {channel.name}")
+                        return None
                 await self.radio.voice.move_to(channel)
         else:
+            # Check if someone else is already there before connecting
+            for member in channel.members:
+                if member.bot and member.id != self.bot.user.id:
+                    log.info(f"[VOICE] Aborting join: Another bot ({member.name}) is already in {channel.name}")
+                    # Reset state so we don't keep trying
+                    self.radio.voice_channel_id = None
+                    self.radio.status = RadioStatusEnum.IDLE
+                    return None
             try:
                 # Use a shorter timeout (e.g. 20s) so we don't hang the loop for a full minute
                 # and reconnect=True to let discord.py handle the gateway details
@@ -101,6 +114,10 @@ class RadioPlayer:
                 await self.radio.add_external_link(data)
                 self.radio.status = RadioStatusEnum.PLAYING
                 await self.refresh_ui()
+            elif action == RadioAction.ADD_SONGS:
+                await self.radio.add_songs(data, user=self.radio.last_user)
+                self.radio.status = RadioStatusEnum.PLAYING
+                await self.refresh_ui()
             elif action == RadioAction.DISCONNECT:
                 await self._disconnect(None)
         except asyncio.TimeoutError:
@@ -151,6 +168,9 @@ class RadioPlayer:
                 return True
             elif action == RadioAction.ADD_EXT_LINK:
                 await self.radio.add_external_link(data)
+                await self.refresh_ui()
+            elif action == RadioAction.ADD_SONGS:
+                await self.radio.add_songs(data, user=self.radio.last_user)
                 await self.refresh_ui()
             elif action == RadioAction.REPLAY:
                 # IMPORTANT: If we are STOPPED but have a current_song, we want to play it, not skip to next.
@@ -429,6 +449,10 @@ class RadioPlayer:
             return True
         elif action == RadioAction.ADD_EXT_LINK:
             await self.radio.add_external_link(data)
+            await self.refresh_ui()
+            return False
+        elif action == RadioAction.ADD_SONGS:
+            await self.radio.add_songs(data, user=self.radio.last_user)
             await self.refresh_ui()
             return False
         return False

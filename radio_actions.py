@@ -17,3 +17,4 @@ class RadioAction(Enum):
     SET_VOLUME = auto()
     BACK = auto()
     ADD_EXT_LINK = auto()
+    ADD_SONGS = auto()

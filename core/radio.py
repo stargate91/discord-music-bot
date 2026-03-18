@@ -139,6 +139,19 @@ class RadioManager:
             
         return song
 
+    async def add_songs(self, songs: List[Song], user: Optional[discord.Member | discord.User] = None):
+        for song in songs:
+            # Create a clean copy if needed (e.g. they might be from history)
+            # but usually for favorites we just want them as is
+            if user:
+                song.requested_by = user.display_name
+                song.user_id = str(user.id)
+            self.queue.append(song)
+        
+        log.info(f"[QUEUE] Added {len(songs)} songs to queue.")
+        if self.on_state_change:
+            await self.on_state_change(self.current_song)
+
     async def _resolve_playlist_task(self, url: str, user: Optional[discord.Member | discord.User] = None):
         tracks_data = await resolve_playlist_any(url, self.providers)
         if tracks_data:

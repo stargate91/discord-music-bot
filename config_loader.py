@@ -20,6 +20,7 @@ class Config:
     ui_settings: dict
     timings: dict
     defaults: dict
+    emojis: dict = field(default_factory=dict)
 
     @property
     def embed_refresh_minutes(self): return self.timings.get("embed_refresh_minutes", 58)
@@ -28,7 +29,11 @@ class Config:
     @property
     def error_retry_seconds(self): return self.timings.get("error_retry_seconds", 5)
     @property
-    def afk_timeout_seconds(self): return self.timings.get("afk_timeout_seconds", 300)
+    def afk_retry_seconds(self): return self.timings.get("afk_retry_seconds", 5)
+    @property
+    def solitary_timeout_seconds(self): return self.timings.get("solitary_timeout_seconds", 300)
+    @property
+    def idle_timeout_seconds(self): return self.timings.get("idle_timeout_seconds", 1200)
     @property
     def default_volume(self): return self.defaults.get("volume", 0.5)
     @property
@@ -41,12 +46,51 @@ class Config:
     def list_max_title_len(self): return self.ui_settings.get("list_max_title_len", 60)
     @property
     def max_uploader_len(self): return self.ui_settings.get("max_uploader_len", 35)
+    @property
+    def database_path(self): return self.defaults.get("database_path", "data/radio.db")
+    @property
+    def log_level(self): return self.defaults.get("log_level", "INFO")
+    @property
+    def ffmpeg_reconnect_options(self):
+        return self.defaults.get("ffmpeg_reconnect_options", (
+            "-reconnect 1 "
+            "-reconnect_at_eof 1 "
+            "-reconnect_streamed 1 "
+            "-reconnect_delay_max 5 "
+            "-reconnect_on_network_error 1 "
+            "-reconnect_on_http_error 4xx,5xx"
+        ))
+    @property
+    def search_items_per_page(self): return self.ui_settings.get("search_items_per_page", 7)
+    @property
+    def queue_items_per_page(self): return self.ui_settings.get("queue_items_per_page", 6)
+    @property
+    def action_timeout(self): return self.timings.get("action_timeout", 5.0)
+    @property
+    def view_timeout(self): return self.timings.get("view_timeout", 60)
+    @property
+    def command_delete_delay(self): return self.timings.get("command_delete_delay", 1.5)
+    @property
+    def ui_cleanup_frequency(self): return self.timings.get("ui_cleanup_frequency", 60)
+    @property
+    def message_cleanup_limit(self): return self.timings.get("message_cleanup_limit", 50)
+    @property
+    def player_loop_sleep(self): return self.timings.get("player_loop_sleep", 0.5)
+    @property
+    def command_prefix(self): return self.defaults.get("prefix", "!")
+    @property
+    def history_limit(self): return self.defaults.get("history_limit", 50)
+    @property
+    def search_limit(self): return self.defaults.get("search_limit", 20)
+    @property
+    def user_agent(self): 
+        return self.defaults.get("user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
 
 def load_config(config_file: str = "config.json", instance_name: str = ""):
     config_dir = os.path.join(os.path.dirname(__file__), "configs")
     
     # env file logic: check configs/ directory first
-    env_name = f".env.{instance_name}" if instance_name else ".env"
+    env_name = f"{instance_name}.env" if instance_name else ".env"
     env_path = os.path.join(config_dir, env_name)
     
     # Fallback to root for backwards compatibility if not found in configs/
@@ -102,5 +146,6 @@ def load_config(config_file: str = "config.json", instance_name: str = ""):
         languages=data.get("languages", []),
         ui_settings=data.get("ui_settings", {}),
         timings=data.get("timings", {}),
-        defaults=data.get("defaults", {})
+        defaults=data.get("defaults", {}),
+        emojis=data.get("emojis", {})
     )

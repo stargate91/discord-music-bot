@@ -147,6 +147,25 @@ class Database:
                 conn.commit()
         except: pass
 
+    def pop_history_latest(self) -> Optional[Song]:
+        """Fetches and deletes the most recent history entry."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
+                cursor.execute("SELECT * FROM history ORDER BY played_at DESC LIMIT 1")
+                row = cursor.fetchone()
+                if row:
+                    song = Song.from_dict(dict(row))
+                    cursor.execute("DELETE FROM history WHERE id = ?", (row["id"],))
+                    conn.commit()
+                    return song
+                return None
+        except Exception as e:
+            from logger import log
+            log.error(f"Error popping history from DB: {e}")
+            return None
+
     def get_history(self, limit: int = 50) -> List[Song]:
         try:
             with sqlite3.connect(self.db_path) as conn:

@@ -4,7 +4,7 @@ from discord.ui import Modal, TextInput, LayoutView, ActionRow, Container, Secti
 from ui_translate import t
 from ui_icons import Icons
 from ui_base import handle_ui_error, BaseView
-from ui_utils import format_duration, get_dominant_color
+from ui_utils import format_duration
 from radio_actions import RadioAction, RadioState as RadioStatusEnum
 from core.models import Song
 from ui_theme import Theme
@@ -154,7 +154,7 @@ class BackButton(discord.ui.Button):
             emoji=Icons.BACK,
             style=discord.ButtonStyle.secondary,
             custom_id="back_button",
-            disabled=(not radio.history) or (radio.status == RadioStatusEnum.IDLE and not radio.queue)
+            disabled=(not radio.history)
         )
         self.radio = radio
 
@@ -325,6 +325,52 @@ class UIStyleSelect(discord.ui.Select):
         if _update_callback:
             await _update_callback(self.radio.current_song)
 
+class HelpButton(discord.ui.Button):
+    def __init__(self, radio):
+        super().__init__(
+            label=t("help_label"),
+            emoji=Icons.HELP,
+            style=discord.ButtonStyle.secondary,
+            custom_id="welcome:help"
+        )
+        self.radio = radio
+
+    @handle_ui_error
+    async def callback(self, interaction: discord.Interaction):
+        view = HelpView(self.radio)
+        await interaction.response.send_message(embed=view.get_embed(), ephemeral=True)
+
+class HelpView:
+    def __init__(self, radio):
+        self.radio = radio
+        self.config = radio.config
+
+    def get_embed(self) -> discord.Embed:
+        prefix = self.config.command_prefix
+        embed = discord.Embed(
+            title=f"{Icons.HELP} {t('help_title')}",
+            description=t("help_description"),
+            color=Theme.PRIMARY
+        )
+        
+        commands = [
+            ("play [url/search]", t("help_play_desc")),
+            ("pause", t("help_pause_desc")),
+            ("stop", t("help_stop_desc")),
+            ("skip", t("help_skip_desc")),
+            ("back", t("help_back_desc")),
+            ("volume [0-100]", t("help_vol_desc")),
+            ("seek [time]", t("help_seek_desc")),
+            ("queue", t("help_queue_desc")),
+            ("join", t("help_join_desc")),
+            ("disconnect", t("help_leave_desc"))
+        ]
+        
+        for cmd, desc in commands:
+            embed.add_field(name=f"`/{cmd}` vagy `{prefix}{cmd}`", value=desc, inline=False)
+            
+        return embed
+
 class WelcomeLayout(BaseView):
     """
     Premium Welcome Screen for the Radio Bot.
@@ -349,8 +395,9 @@ class WelcomeLayout(BaseView):
             guild = None
                 
         if guild:
-            # Voice Channel Selection
-            v_channels = [c for c in sorted(guild.voice_channels, key=lambda c: c.position)][:25]
+            # Voice Channel Selection (Exclude AFK channel)
+            afk_id = radio.config.afk_channel_id
+            v_channels = [c for c in sorted(guild.voice_channels, key=lambda c: c.position) if c.id != afk_id][:25]
             row_station = ActionRow()
             row_station.add_item(StationSelect(radio, v_channels, custom_id="welcome:station_select"))
             header.add_item(row_station)
@@ -370,6 +417,7 @@ class WelcomeLayout(BaseView):
             row_lib = ActionRow()
             row_lib.add_item(LibraryButton(radio, custom_id="welcome:library_button"))
             row_lib.add_item(HistoryButton(radio, custom_id="welcome:history_button"))
+            row_lib.add_item(HelpButton(radio))
             header.add_item(row_lib)
 
         self.add_item(header)
@@ -391,8 +439,9 @@ class FrequencyStationView(BaseView):
         
         guild = _bot_ref.get_guild(_config_ref.guild_id)
         if guild:
-            # Channel selection
-            v_channels = [c for c in sorted(guild.voice_channels, key=lambda c: c.position)][:25]
+            # Channel selection (Exclude AFK channel)
+            afk_id = radio.config.afk_channel_id
+            v_channels = [c for c in sorted(guild.voice_channels, key=lambda c: c.position) if c.id != afk_id][:25]
             row_select = ActionRow()
             row_select.add_item(StationSelect(radio, v_channels, custom_id="station:station_select"))
             main.add_item(row_select)

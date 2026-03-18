@@ -22,10 +22,10 @@ class RadioManager:
         self.providers = get_providers(config)
         
         # Central Database
-        self.db = Database("data/radio.db")
+        self.db = Database(config.database_path)
         
         self.fav_manager = FavoriteManager(self.db)
-        self.history_manager = HistoryManager(self.db)
+        self.history_manager = HistoryManager(self.db, max_size=config.history_limit)
         
         # Initialize Theme
         Theme.init_theme(config)
@@ -66,53 +66,77 @@ class RadioManager:
         return self.history_manager.history
 
     def dispatch(self, action: RadioAction, data: Any = None, user: Optional[discord.Member | discord.User] = None):
-        """Dispatches an action to the player engine."""
         user_str = f" by {user.name}" if user else ""
         data_str = f" with [{data}]" if data else ""
         log.info(f"[ACTION] {action.name}{data_str}{user_str}")
         if user:
             self.last_user = user
         self.action_queue.put_nowait((action, data))
-    async def add_external_link(self, url: str, user: Optional[discord.Member | discord.User] = None):
-        """Adds an external link or playlist to the queue."""
-        # Check if it's a playlist
-        is_playlist = any(p.matches(url) and p.is_playlist(url) for p in self.providers)
+    async def add_external_link(self, query: str, user: Optional[discord.Member | discord.User] = None):
+        query = query.strip()
         
-        if is_playlist:
-            log.info(f"[QUEUE] Playlist detected, starting batch resolution: {url}")
-            asyncio.create_task(self._resolve_playlist_task(url, user))
-            return None
+        # Check if it's a direct URL
+        provider = next((p for p in self.providers if p.matches(query)), None)
+        
+        if provider:
+            # It's a URL
+            if provider.is_playlist(query):
+                log.info(f"[QUEUE] Playlist detected: {query}")
+                asyncio.create_task(self._resolve_playlist_task(query, user))
+                return None
             
-        from ui_translate import t
-        
-        # Check cache first
-        cached = self.db.get_cache(url)
-        if cached:
-            song = Song.from_dict(cached)
-            song.path = url # Ensure original URL is used for resolution
-            song.is_resolving = True
-            song.is_external = True
-            log.info(f"[CACHE] Hit for: {url}")
+            # Single link - Check cache
+            cached = self.db.get_cache(query)
+            if cached:
+                song = Song.from_dict(cached)
+                song.path = query
+                song.is_resolving = True
+                song.is_external = True
+                log.info(f"[CACHE] Hit for: {query}")
+            else:
+                from ui_translate import t
+                song = Song(
+                    title=t("resolving_link"),
+                    path=query,
+                    uploader="...",
+                    duration=0,
+                    is_external=True,
+                    is_resolving=True
+                )
         else:
-            # Create a placeholder for single track using Song dataclass
-            song = Song(
-                title=t("resolving_link"),
-                path=url,
-                uploader="...",
-                duration=0,
-                is_external=True,
-                is_resolving=True
-            )
+            # It's a search query
+            log.info(f"[SEARCH] Searching for: {query}")
+            search_results = []
+            for p in self.providers:
+                if hasattr(p, 'search'):
+                    res = await p.search(query, limit=1)
+                    if res:
+                        search_results.extend(res)
+            
+            if not search_results:
+                log.warning(f"[SEARCH] No results found for: {query}")
+                # We could send a message back here, but add_external_link is called from dispatch
+                return None
+            
+            # Take the first result
+            data = search_results[0]
+            song = Song.from_dict(data)
+            song.is_resolving = False # Search results are already somewhat resolved
         
         if user:
             song.user_id = str(user.id)
             song.requested_by = user.display_name
             
         self.queue.append(song)
-        log.info(f"[QUEUE] New link added: {url}")
+        if not provider:
+            log.info(f"[SEARCH] Added first result: {song.title}")
+        else:
+            log.info(f"[QUEUE] Added link: {query}")
         
-        # Start resolution in background
-        asyncio.create_task(self._resolve_link_task(song))
+        # Start resolution if needed (for direct links or refreshing search results)
+        if provider or song.is_resolving:
+            asyncio.create_task(self._resolve_link_task(song))
+            
         return song
 
     async def _resolve_playlist_task(self, url: str, user: Optional[discord.Member | discord.User] = None):
@@ -179,3 +203,33 @@ class RadioManager:
             return True
         
         return False
+
+    def can_interact(self, user: discord.Member | discord.User) -> bool:
+        """
+        Checks if the user has permission to interact with the bot.
+        Admins can always interact.
+        The voice channel restriction ONLY applies if the bot is:
+        - PLAYING
+        - PAUSED
+        - STOPPED
+        If the bot is IDLE, anyone can interact (e.g. to make it join their channel).
+        """
+        if self.is_admin(user):
+            return True
+
+        # If IDLE, we don't restrict by channel
+        if self.status == RadioStatusEnum.IDLE:
+            return True
+
+        if not self.voice or not self.voice.channel:
+            # If not in voice despite status (shouldn't happen often), allow interaction
+            return True
+
+        if not isinstance(user, discord.Member):
+            return False
+
+        # Must be in the same voice channel if the bot is active
+        if not user.voice or user.voice.channel.id != self.voice.channel.id:
+            return False
+
+        return True

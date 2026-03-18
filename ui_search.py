@@ -87,7 +87,7 @@ class SearchModal(Modal):
         for provider in self.radio.providers:
             # We only search with YTDLP for now as per request
             if hasattr(provider, 'search'):
-                provider_results = await provider.search(query, limit=20)
+                provider_results = await provider.search(query, limit=self.radio.config.search_limit)
                 # Convert dict results to Song objects
                 results.extend([Song.from_dict(res) for res in provider_results])
         
@@ -159,7 +159,7 @@ class SearchResultsView(PaginatedView):
     def __init__(self, radio, results, query=None, user=None, page=0):
         # Safety conversion for legacy dict results
         results = [Song.from_dict(r) if isinstance(r, dict) else r for r in results]
-        super().__init__(radio, results, items_per_page=7, page=page)
+        super().__init__(radio, results, items_per_page=radio.config.search_items_per_page, page=page)
         self.results = results
         self.query = query
         self.user = user
@@ -276,7 +276,7 @@ class FavoriteRemoveButton(discord.ui.Button):
 class FavoritesView(PaginatedView):
     def __init__(self, radio, user_id, page=0):
         favs = radio.fav_manager.get_favorites(user_id)
-        super().__init__(radio, favs, items_per_page=7, page=page)
+        super().__init__(radio, favs, items_per_page=radio.config.search_items_per_page, page=page)
         self.user_id = user_id
         
         container = Container(accent_color=Theme.PRIMARY)
@@ -408,7 +408,7 @@ class HistoryView(PaginatedView):
     def __init__(self, radio, page=0, user=None):
         # The history list from the radio
         history = [Song.from_dict(r) if isinstance(r, dict) else r for r in radio.history]
-        super().__init__(radio, history, items_per_page=7, page=page)
+        super().__init__(radio, history, items_per_page=radio.config.search_items_per_page, page=page)
         self.radio = radio
         self.user = user
         
@@ -588,8 +588,8 @@ class FullQueueView(PaginatedView):
     def __init__(self, radio, page=0):
         # Force all items to be Song objects if they are dicts
         queue = [Song.from_dict(r) if isinstance(r, dict) else r for r in radio.queue]
-        # 6 tracks per page: Each track uses 1 Text + 1 Row (with 4 buttons)
-        super().__init__(radio, queue, items_per_page=6, page=page)
+        # 6 tracks per page (configurable)
+        super().__init__(radio, queue, items_per_page=radio.config.queue_items_per_page, page=page)
         container = Container(accent_color=Theme.PRIMARY)
         container.add_item(TextDisplay(f"### {Icons.QUEUE} {t('queue_label')}"))
         container.add_item(Separator())
@@ -602,13 +602,10 @@ class FullQueueView(PaginatedView):
 
             items = self.get_page_items()
             for i, song in enumerate(items, self.current_page * self.items_per_page + 1):
-                raw_name = song.uploader or t('unknown')
                 raw_title = song.title or t('unknown')
-                
-                t_name = truncate(raw_name, radio.config.max_uploader_len)
                 t_title = truncate(raw_title, radio.config.list_max_title_len)
                 
-                song_info = f"**{i}. {t_title}**\n{t_name} ({format_duration(song.duration)})"
+                song_info = f"**{i}. {t_title}** ({format_duration(song.duration)})"
                 
                 # Add text info first
                 container.add_item(TextDisplay(song_info))

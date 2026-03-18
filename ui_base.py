@@ -6,9 +6,29 @@ from ui_translate import t
 from logger import log
 
 def handle_ui_error(func):
-    """Decorator to handle errors in UI callbacks gracefully."""
+    """Decorator to handle errors in UI callbacks and enforce permissions."""
     async def wrapper(*args, **kwargs):
         interaction = next((arg for arg in args if isinstance(arg, discord.Interaction)), None)
+        if not interaction:
+            return await func(*args, **kwargs)
+
+        # Enforce permission check
+        # Usually, component callbacks are methods: (self, interaction)
+        # We check if self has a 'radio' attribute
+        self_obj = args[0] if args else None
+        radio = getattr(self_obj, 'radio', None)
+        
+        if radio and hasattr(radio, 'can_interact'):
+            if not radio.can_interact(interaction.user):
+                # We need to import t inside to avoid circular imports or missing refs
+                # but it's already at top level. Let's use it.
+                msg = t('not_in_same_voice') or "Join the bot's voice channel to interact!"
+                if not interaction.response.is_done():
+                    await interaction.response.send_message(f"{Icons.WARNING} {msg}", ephemeral=True)
+                else:
+                    await interaction.followup.send(f"{Icons.WARNING} {msg}", ephemeral=True)
+                return
+
         try:
             return await func(*args, **kwargs)
         except (discord.errors.NotFound, discord.errors.HTTPException) as e:

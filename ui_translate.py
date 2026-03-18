@@ -8,7 +8,7 @@ _translations = {}
 _radio_ref = None
 
 def load_locales():
-    """Load all .json files from the locales directory."""
+    """Load all .json files from the locales directory, handling instance overrides."""
     global _translations
     base_path = os.path.dirname(os.path.abspath(__file__))
     locales_path = os.path.join(base_path, "locales")
@@ -17,14 +17,30 @@ def load_locales():
         print(f"Warning: Locales path not found at {locales_path}")
         return
 
+    # 1. First load base languages (e.g. hu.json, en.json)
     for filename in os.listdir(locales_path):
-        if filename.endswith(".json"):
+        if filename.endswith(".json") and "_" not in filename:
             lang_code = filename[:-5]
             try:
                 with open(os.path.join(locales_path, filename), "r", encoding="utf-8") as f:
                     _translations[lang_code] = json.load(f)
             except Exception as e:
-                print(f"Error loading locale {filename}: {e}")
+                print(f"Error loading base locale {filename}: {e}")
+
+    # 2. Check for instance-specific overrides if INSTANCE_NAME is set
+    instance_name = os.environ.get("INSTANCE_NAME")
+    if instance_name:
+        for filename in os.listdir(locales_path):
+            if filename.endswith(f"_{instance_name}.json"):
+                lang_code = filename.split("_")[0]
+                if lang_code in _translations:
+                    try:
+                        with open(os.path.join(locales_path, filename), "r", encoding="utf-8") as f:
+                            overrides = json.load(f)
+                            # Merge overrides into the base language dict
+                            _translations[lang_code].update(overrides)
+                    except Exception as e:
+                        print(f"Error loading instance override {filename}: {e}")
 
 # Initial load
 load_locales()

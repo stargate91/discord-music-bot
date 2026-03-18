@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 from core.models import Song
 from core.database import Database
 
@@ -28,6 +28,10 @@ class HistoryManager:
     def clear(self):
         """Removes all items from history."""
         self.db.clear_history()
+
+    def pop_latest(self) -> Optional[Song]:
+        """Fetches and deletes the most recent history entry."""
+        return self.db.pop_history_latest()
 
     @property
     def history(self) -> List[Song]:

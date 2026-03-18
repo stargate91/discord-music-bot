@@ -20,7 +20,10 @@ class ColoredFormatter(logging.Formatter):
         return super().format(record)
 
 log = logging.getLogger("RadioBot")
-log.setLevel(logging.INFO)
+
+def setup_logging(level_name: str = "INFO"):
+    level = getattr(logging, level_name.upper(), logging.INFO)
+    log.setLevel(level)
 
 # Ensure data directory exists
 os.makedirs("data", exist_ok=True)

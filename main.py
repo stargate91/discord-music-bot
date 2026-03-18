@@ -3,6 +3,7 @@ import discord
 import sys
 import os
 import argparse
+import random
 
 # 1. Parse instance arguments before importing project modules
 parser = argparse.ArgumentParser(description="Discord Radio Bot Instance")
@@ -28,10 +29,18 @@ from ui_translate import t
 
 async def main():
     # Determine config file name
-    config_file = args.config if args.config else (f"config_{args.instance}.json" if args.instance else "config.json")
+    config_file = args.config if args.config else (f"config{args.instance}.json" if args.instance else "config.json")
     
     try:
         config = load_config(config_file, instance_name=args.instance)
+        
+        # Initialize Icons from config
+        from ui_icons import Icons
+        Icons.setup(config)
+
+        # Initialize Logging
+        from logger import setup_logging
+        setup_logging(config.log_level)
     except FileNotFoundError:
         print(f"Error: Configuration file '{config_file}' not found.")
         sys.exit(1)
@@ -74,6 +83,8 @@ async def main():
                 except:
                     pass
 
+    bg_tasks = []
+
     @bot.event
     async def on_ready():
         log.info(f"Online as: {bot.user}")
@@ -86,7 +97,7 @@ async def main():
         except Exception as e:
             log.error(f"Error during on_ready: {e}")
 
-        # Sync Slash Commands
+        # [Slash sync logic omitted for brevity as it remains the same]
         try:
             guild_id = config.guild_id
             if guild_id and guild_id > 0:
@@ -100,7 +111,7 @@ async def main():
         except Exception as e:
             log.error(f"Failed to sync commands: {e}")
             
-        # Optional Auto-Join
+        # Optional Auto-Join [and jitter added in previous step]
         if config.auto_join_channel_id > 0:
             try:
                 channel = bot.get_channel(config.auto_join_channel_id)
@@ -110,18 +121,22 @@ async def main():
                 if channel and isinstance(channel, discord.VoiceChannel):
                     if not channel.guild.voice_client:
                         log.info(f"Auto-joining channel: {channel.name}")
-                        await channel.connect()
+                        if args.instance:
+                            await asyncio.sleep(random.uniform(0.5, 3.0))
+                        await channel.connect(reconnect=True, timeout=20.0, self_deaf=True)
                         radio.voice_channel_id = channel.id
                         radio.voice = channel.guild.voice_client
                         radio.status = RadioStatusEnum.IDLE
             except Exception as e:
                 log.error(f"Auto-join failed: {e}")
 
-        # Start Background tasks
+        # Start Background tasks and store them for cleanup
         if not radio.task:
             radio.task = bot.loop.create_task(player_instance.run_loop())
-        bot.loop.create_task(embed_refresh_loop())
-        bot.loop.create_task(progress_update_loop())
+            bg_tasks.append(radio.task)
+        
+        bg_tasks.append(bot.loop.create_task(embed_refresh_loop()))
+        bg_tasks.append(bot.loop.create_task(progress_update_loop()))
 
     @bot.event
     async def on_voice_state_update(member, before, after):
@@ -153,7 +168,7 @@ async def main():
         if message.author.bot or not message.content:
             return
 
-        prefix = "!" # You can make this configurable
+        prefix = config.command_prefix
         if not message.content.startswith(prefix):
             return
 
@@ -169,7 +184,7 @@ async def main():
         handled = False
         
         async def delayed_delete(msg):
-            await asyncio.sleep(1.5) # Wait a bit so the user sees it "worked"
+            await asyncio.sleep(config.command_delete_delay) # Wait a bit so the user sees it "worked"
             try:
                 await msg.delete()
             except discord.Forbidden:
@@ -181,12 +196,12 @@ async def main():
             # Start deletion in background with delay
             asyncio.create_task(delayed_delete(message))
 
-            if command == "play":
+            if command in ["play", "p"]:
                 if not message.author.voice:
                     await message.channel.send(f"{message.author.mention} " + t("no_permission"), delete_after=5)
                 else:
-                    url = args[0] if args else None
-                    if not url:
+                    query = " ".join(args).strip() if args else None
+                    if not query:
                         if radio.status == RadioStatusEnum.PAUSED:
                             radio.dispatch(RadioAction.REPLAY, user=message.author)
                         else:
@@ -194,33 +209,33 @@ async def main():
                     else:
                         if radio.voice_channel_id is None:
                             radio.dispatch(RadioAction.JOIN, message.author.voice.channel.id, user=message.author)
-                        radio.dispatch(RadioAction.ADD_EXT_LINK, url.strip(), user=message.author)
+                        radio.dispatch(RadioAction.ADD_EXT_LINK, query, user=message.author)
 
             elif command == "stop":
                 radio.dispatch(RadioAction.STOP, user=message.author)
 
-            elif command == "disconnect" or command == "leave":
+            elif command in ["disconnect", "leave", "d", "l"]:
                 radio.dispatch(RadioAction.DISCONNECT, user=message.author)
 
-            elif command == "skip":
+            elif command in ["skip", "s"]:
                 if radio.queue:
                     radio.dispatch(RadioAction.SKIP, user=message.author)
                 else:
                     await message.channel.send(f"{message.author.mention} " + t("no_next_track"), delete_after=5)
 
-            elif command == "back":
+            elif command in ["back", "b"]:
                 if radio.history:
                     radio.dispatch(RadioAction.BACK, user=message.author)
                 else:
                     await message.channel.send(f"{message.author.mention} " + t("no_prev_track"), delete_after=5)
 
-            elif command == "join":
+            elif command in ["join", "j"]:
                 if message.author.voice:
                     radio.dispatch(RadioAction.JOIN, message.author.voice.channel.id, user=message.author)
                 else:
                     await message.channel.send(f"{message.author.mention} " + t("no_permission"), delete_after=5)
 
-            elif command == "volume" and args:
+            elif command in ["volume", "v"] and args:
                 try:
                     vol = int(args[0])
                     if 0 <= vol <= 100:
@@ -229,6 +244,16 @@ async def main():
                         await message.channel.send(f"{message.author.mention} " + t("vol_range_error"), delete_after=5)
                 except:
                     await message.channel.send(f"{message.author.mention} " + t("invalid_number"), delete_after=5)
+
+            elif command in ["queue", "q"]:
+                from ui_search import FullQueueView
+                view = FullQueueView(radio, page=0)
+                await message.channel.send(view=view, delete_after=config.view_timeout)
+
+            elif command in ["help", "h"]:
+                from ui_player import HelpView
+                view = HelpView(radio)
+                await message.channel.send(embed=view.get_embed(), delete_after=config.view_timeout)
 
             elif command == "seek" and args:
                 if radio.current_song:
@@ -245,16 +270,29 @@ async def main():
                 else:
                     await message.channel.send(f"{message.author.mention} " + t("no_current_track"), delete_after=5)
             
-            elif command == "queue":
-                from ui_search import FullQueueView
-                view = FullQueueView(radio, page=0)
-                await message.channel.send(view=view, delete_after=60)
 
         except Exception as e:
             log.error(f"Error in prefix command {command}: {e}")
 
-    async with bot:
-        await bot.start(config.token)
+    try:
+        async with bot:
+            await bot.start(config.token)
+    except (asyncio.CancelledError, KeyboardInterrupt):
+        log.info("Shutdown initiated...")
+    finally:
+        # Gracefully cancel all tracked background tasks
+        log.info(f"Cleaning up {len(bg_tasks)} background tasks...")
+        for task in bg_tasks:
+            if not task.done():
+                task.cancel()
+        
+        if bg_tasks:
+            # Shield to allow cancellation to propagate
+            await asyncio.gather(*bg_tasks, return_exceptions=True)
+        
+        if not bot.is_closed():
+            await bot.close()
+        log.info("Shutdown complete.")
 
 if __name__ == "__main__":
     try:

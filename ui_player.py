@@ -291,26 +291,32 @@ class FavoriteToggleButton(discord.ui.Button):
             
         added = self.radio.fav_manager.toggle_favorite(interaction.user.id, self.song)
         
-        # Update button state FOR THE NEXT ACTION
-        # If just added, the button should now show "Remove"
-        # If just removed, the button should now show "Favorite" (Add)
+        # Update button state for visual persistence
         self.emoji = Icons.HEART_MINUS if added else Icons.HEART_PLUS
         
         if not self.radio.is_compact:
             self.label = t('fav_remove_label') if added else t('fav_add_label')
         
-        icon = Icons.HEART_PLUS if added else Icons.HEART_MINUS # Message icon
+        icon = Icons.HEART_PLUS if added else Icons.HEART_MINUS
         msg = t("added_to_fav") if added else t("removed_from_fav")
         
-        await interaction.response.send_message(f"{icon} {msg}", ephemeral=True)
+        # Confirm with ephemeral first to avoid interaction timeout
+        if not interaction.response.is_done():
+            await interaction.response.send_message(f"{icon} {msg}", ephemeral=True)
+        else:
+            await interaction.followup.send(f"{icon} {msg}", ephemeral=True)
+            
+        # Standard deletion tracking for the notification
         from ui_utils import delayed_delete
         asyncio.create_task(delayed_delete(interaction, self.radio.config.notification_timeout))
         
-        # Edit the message to reflect the new button state
+        # Refresh the main message UI to reflect changed HEART state immediately if possible
         try:
+            # We try to edit the message the button is on
             await interaction.message.edit(view=self.view)
-        except Exception:
-            pass
+        except Exception as e:
+            log.debug(f"[UI] Could not refresh player view: {e}")
+            # Non-critical if fails, the regular refresh loop will fix it anyway
 
 
 class UIStyleSelect(discord.ui.Select):

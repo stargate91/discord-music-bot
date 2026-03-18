@@ -1,4 +1,5 @@
 import discord
+import asyncio
 from discord.ui import Modal, TextInput, ActionRow, Container, Section, TextDisplay, Separator
 from ui_translate import t
 from ui_icons import Icons
@@ -142,22 +143,28 @@ class FavoriteListButton(discord.ui.Button):
         # Update button emoji for immediate visual feedback
         self.emoji = Icons.HEART_MINUS if added else Icons.HEART_PLUS
         
-        # Defer so we can edit the original message
+        # Defer so we can respond to the interaction
         if not interaction.response.is_done():
             await interaction.response.defer(ephemeral=True)
             
-        # Refresh the entire list view so icons are updated everywhere (if parent is PaginatedView)
+        # Refresh the view state if possible
         try:
-            await interaction.edit_original_response(view=self.view)
-        except Exception:
-            # Fallback if refresh fails
-            pass
-            
+            if hasattr(self.view, 'refresh_view'):
+                # Prefer creating a new view instance for full UI stability
+                await self.view.refresh_view(interaction)
+            else:
+                # Fallback to simple edit
+                await interaction.edit_original_response(view=self.view)
+        except Exception as e:
+            log.debug(f"[UI] Favorite refresh failed (non-critical): {e}")
+
         icon = Icons.HEART_PLUS if added else Icons.HEART_MINUS
         msg = t("added_to_fav") if added else t("removed_from_fav")
-        await interaction.followup.send(f"{icon} {msg}", ephemeral=True)
+        
+        # Send a followup and track IT for deletion (don't delete original interaction)
         from ui_utils import delayed_delete
-        asyncio.create_task(delayed_delete(interaction, self.radio.config.notification_timeout))
+        confirm_msg = await interaction.followup.send(f"{icon} {msg}", ephemeral=True)
+        asyncio.create_task(delayed_delete(confirm_msg, self.radio.config.notification_timeout))
 
 class SearchResultsView(PaginatedView):
     def __init__(self, radio, results, query=None, user=None, page=0):
@@ -370,6 +377,8 @@ class AddAllFavoritesButton(discord.ui.Button):
             return
 
         await interaction.response.defer(ephemeral=True)
+        
+        log.info(f"[UI] AddAllFavoritesButton clicked by {interaction.user.name}. Total songs in list: {len(self.songs)}")
         
         # Create clean copies without internal state for the queue
         q_songs = []

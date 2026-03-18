@@ -190,6 +190,9 @@ class Database:
 
     # --- Favorites Methods ---
     def add_favorite(self, user_id: str, song: Song):
+        if not song or not song.path:
+            return
+            
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()

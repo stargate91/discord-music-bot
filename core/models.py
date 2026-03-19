@@ -33,6 +33,8 @@ class Song:
             thumbnail_url=data.get("thumbnail_url") or data.get("thumbnail"),
             webpage_url=data.get("webpage_url"),
             source=data.get("source"),
+            requested_by=data.get("requested_by"),
+            user_id=data.get("user_id"),
             is_resolving=data.get("is_resolving", False),
             is_external=data.get("is_external", False),
             stream_url=data.get("stream_url"),

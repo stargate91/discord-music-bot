@@ -19,11 +19,11 @@ class HistoryManager:
         if not song.played_at:
             song.played_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        self.db.add_history(song, max_size=self.max_size)
+        self.db.add_history(song)
 
-    def get_all(self) -> List[Song]:
-        """Returns the last items from the DB."""
-        return self.db.get_history(limit=self.max_size)
+    def get_all(self, limit: Optional[int] = None) -> List[Song]:
+        """Returns items from the DB. Defaults to no limit if None."""
+        return self.db.get_history(limit=limit)
 
     def clear(self):
         """Removes all items from history."""

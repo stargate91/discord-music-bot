@@ -42,6 +42,10 @@ class RadioManager:
         self.station_message: Optional[discord.Message] = None
         self.now_playing_message: Optional[discord.Message] = None
         
+        # Navigation State (Browser-like History)
+        self.future_queue: List[Song] = []
+        self.is_navigating: bool = False
+        
         # UI State
         self.language: str = config.default_language
         self.is_compact: bool = (config.default_ui_mode == "compact")

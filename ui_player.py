@@ -4,7 +4,7 @@ from discord.ui import Modal, TextInput, LayoutView, ActionRow, Container, Secti
 from ui_translate import t
 from ui_icons import Icons
 from ui_base import handle_ui_error, BaseView
-from ui_utils import format_duration
+from ui_utils import format_duration, respond
 from radio_actions import RadioAction, RadioState as RadioStatusEnum
 from core.models import Song
 from ui_theme import Theme
@@ -137,7 +137,7 @@ class ForwardButton(discord.ui.Button):
             emoji=Icons.SKIP,
             style=discord.ButtonStyle.secondary,
             custom_id="forward_button",
-            disabled=(not radio.queue)
+            disabled=(not radio.queue and not radio.future_queue and not radio.is_navigating)
         )
         self.radio = radio
 
@@ -178,9 +178,7 @@ class SeekButton(discord.ui.Button):
     @handle_ui_error
     async def callback(self, interaction: discord.Interaction):
         if self.radio.status in [RadioStatusEnum.IDLE, RadioStatusEnum.STOPPED]:
-            await interaction.response.send_message(t("cannot_seek_stopped"), ephemeral=True)
-            from ui_utils import delayed_delete
-            asyncio.create_task(delayed_delete(interaction, self.radio.config.notification_timeout))
+            await respond(interaction, t("cannot_seek_stopped"), delete_after=self.radio.config.notification_timeout)
             return
         modal = SeekModal(self.radio)
         await interaction.response.send_modal(modal)
@@ -209,15 +207,11 @@ class SeekModal(Modal):
             else:
                 total_seconds = int(ts)
         except:
-            await interaction.response.send_message(t("format_error"), ephemeral=True)
-            from ui_utils import delayed_delete
-            asyncio.create_task(delayed_delete(interaction, self.radio.config.notification_timeout))
+            await respond(interaction, t("format_error"), delete_after=self.radio.config.notification_timeout)
             return
         
         if not self.radio.current_song:
-            await interaction.response.send_message(t("no_current_track"), ephemeral=True)
-            from ui_utils import delayed_delete
-            asyncio.create_task(delayed_delete(interaction, self.radio.config.notification_timeout))
+            await respond(interaction, t("no_current_track"), delete_after=self.radio.config.notification_timeout)
             return
             
         self.radio.dispatch(RadioAction.SEEK, total_seconds, user=interaction.user)
@@ -261,13 +255,9 @@ class VolumeModal(Modal):
                 if not interaction.response.is_done():
                     await interaction.response.defer()
             else:
-                await interaction.response.send_message(t("vol_range_error"), ephemeral=True)
-                from ui_utils import delayed_delete
-                asyncio.create_task(delayed_delete(interaction, self.radio.config.notification_timeout))
+                await respond(interaction, t("vol_range_error"), delete_after=self.radio.config.notification_timeout)
         except:
-            await interaction.response.send_message(t("invalid_number"), ephemeral=True)
-            from ui_utils import delayed_delete
-            asyncio.create_task(delayed_delete(interaction, self.radio.config.notification_timeout))
+            await respond(interaction, t("invalid_number"), delete_after=self.radio.config.notification_timeout)
 
 
 class FavoriteToggleButton(discord.ui.Button):
@@ -300,15 +290,7 @@ class FavoriteToggleButton(discord.ui.Button):
         icon = Icons.HEART_PLUS if added else Icons.HEART_MINUS
         msg = t("added_to_fav") if added else t("removed_from_fav")
         
-        # Confirm with ephemeral first to avoid interaction timeout
-        if not interaction.response.is_done():
-            await interaction.response.send_message(f"{icon} {msg}", ephemeral=True)
-        else:
-            await interaction.followup.send(f"{icon} {msg}", ephemeral=True)
-            
-        # Standard deletion tracking for the notification
-        from ui_utils import delayed_delete
-        asyncio.create_task(delayed_delete(interaction, self.radio.config.notification_timeout))
+        await respond(interaction, f"{icon} {msg}", delete_after=self.radio.config.notification_timeout)
         
         # Refresh the main message UI to reflect changed HEART state immediately if possible
         try:
@@ -356,9 +338,7 @@ class HelpButton(discord.ui.Button):
     @handle_ui_error
     async def callback(self, interaction: discord.Interaction):
         view = HelpView(self.radio)
-        await interaction.response.send_message(embed=view.get_embed(), ephemeral=True)
-        from ui_utils import delayed_delete
-        asyncio.create_task(delayed_delete(interaction, self.radio.config.notification_timeout))
+        await respond(interaction, embed=view.get_embed()) # No delete_after for window view
 
 class HelpView:
     def __init__(self, radio):

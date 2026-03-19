@@ -79,6 +79,19 @@ class Database:
             
             conn.commit()
 
+            # Migration: Ensure history has requested_by and user_id columns
+            try:
+                # We use a separate connection/cursor for migrations to be safe
+                with sqlite3.connect(self.db_path) as conn_mig:
+                    conn_mig.execute("ALTER TABLE history ADD COLUMN requested_by TEXT")
+                    conn_mig.commit()
+            except: pass
+            try:
+                with sqlite3.connect(self.db_path) as conn_mig:
+                    conn_mig.execute("ALTER TABLE history ADD COLUMN user_id TEXT")
+                    conn_mig.commit()
+            except: pass
+
     # --- Cache Methods ---
     def get_cache(self, url: str) -> Optional[Dict[str, Any]]:
         try:
@@ -111,7 +124,8 @@ class Database:
             log.error(f"Cache set error: {e}")
 
     # --- History Methods ---
-    def add_history(self, song: Song, max_size: int = 50):
+    def add_history(self, song: Song):
+        """Saves a song to the history table without size constraints."""
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
@@ -123,14 +137,6 @@ class Database:
                     song.title, song.path, song.uploader, song.duration, 
                     song.thumbnail_url, song.is_external, song.requested_by, str(song.user_id) if song.user_id else None
                 ))
-                
-                # Cleanup if exceeded max size
-                cursor.execute("SELECT COUNT(*) FROM history")
-                count = cursor.fetchone()[0]
-                if count > max_size:
-                    to_remove = count - max_size
-                    cursor.execute(f"DELETE FROM history WHERE id IN (SELECT id FROM history ORDER BY played_at ASC LIMIT {to_remove})")
-                
                 conn.commit()
         except Exception as e:
             from logger import log
@@ -153,7 +159,7 @@ class Database:
             with sqlite3.connect(self.db_path) as conn:
                 conn.row_factory = sqlite3.Row
                 cursor = conn.cursor()
-                cursor.execute("SELECT * FROM history ORDER BY played_at DESC LIMIT 1")
+                cursor.execute("SELECT * FROM history ORDER BY id DESC LIMIT 1")
                 row = cursor.fetchone()
                 if row:
                     song = Song.from_dict(dict(row))
@@ -166,12 +172,16 @@ class Database:
             log.error(f"Error popping history from DB: {e}")
             return None
 
-    def get_history(self, limit: int = 50) -> List[Song]:
+    def get_history(self, limit: Optional[int] = None) -> List[Song]:
+        """Retrieves history entries, optionally limited to the most recent N items."""
         try:
             with sqlite3.connect(self.db_path) as conn:
                 conn.row_factory = sqlite3.Row
                 cursor = conn.cursor()
-                cursor.execute("SELECT * FROM history ORDER BY played_at DESC LIMIT ?", (limit,))
+                if limit:
+                    cursor.execute("SELECT * FROM history ORDER BY id DESC LIMIT ?", (limit,))
+                else:
+                    cursor.execute("SELECT * FROM history ORDER BY id DESC")
                 rows = cursor.fetchall()
                 return [Song.from_dict(dict(row)) for row in rows]
         except Exception as e:

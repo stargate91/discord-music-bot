@@ -4,7 +4,7 @@ from discord.ui import Modal, TextInput, ActionRow, Container, Section, TextDisp
 from ui_translate import t
 from ui_icons import Icons
 from ui_base import handle_ui_error, PaginatedView
-from ui_utils import safe_delete_message, safe_fetch_message, format_duration
+from ui_utils import safe_delete_message, safe_fetch_message, format_duration, respond
 from radio_actions import RadioAction, RadioState
 from logger import log
 from ui_theme import Theme
@@ -45,7 +45,7 @@ class WebLinkModal(Modal):
         if not url: return
         
         self.radio.dispatch(RadioAction.ADD_EXT_LINK, url, user=interaction.user)
-        await interaction.followup.send(t("weblink_added"), ephemeral=True)
+        await respond(interaction, t("weblink_added"), delete_after=self.radio.config.notification_timeout)
 
 class SearchButton(discord.ui.Button):
     def __init__(self, radio):
@@ -123,9 +123,7 @@ class SearchResultAddButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
         self.radio.dispatch(RadioAction.ADD_EXT_LINK, self.result.path, user=interaction.user)
-        await interaction.followup.send(t("weblink_added"), ephemeral=True)
-        from ui_utils import delayed_delete
-        asyncio.create_task(delayed_delete(interaction, self.radio.config.notification_timeout))
+        await respond(interaction, t("weblink_added"), delete_after=self.radio.config.notification_timeout)
 
 class FavoriteListButton(discord.ui.Button):
     def __init__(self, radio, song: Song):
@@ -161,10 +159,7 @@ class FavoriteListButton(discord.ui.Button):
         icon = Icons.HEART_PLUS if added else Icons.HEART_MINUS
         msg = t("added_to_fav") if added else t("removed_from_fav")
         
-        # Send a followup and track IT for deletion (don't delete original interaction)
-        from ui_utils import delayed_delete
-        confirm_msg = await interaction.followup.send(f"{icon} {msg}", ephemeral=True)
-        asyncio.create_task(delayed_delete(confirm_msg, self.radio.config.notification_timeout))
+        await respond(interaction, f"{icon} {msg}", delete_after=self.radio.config.notification_timeout)
 
 class SearchResultsView(PaginatedView):
     def __init__(self, radio, results, query=None, user=None, page=0):
@@ -282,9 +277,7 @@ class FavoriteRemoveButton(discord.ui.Button):
             await self.view.refresh_view(interaction)
             
         # Optional: send a followup confirmation
-        await interaction.followup.send(f"{Icons.REMOVE} {t('removed_from_fav')}", ephemeral=True)
-        from ui_utils import delayed_delete
-        asyncio.create_task(delayed_delete(interaction, self.radio.config.notification_timeout))
+        await respond(interaction, f"{Icons.REMOVE} {t('removed_from_fav')}", delete_after=self.radio.config.notification_timeout)
 
 class FavoritesView(PaginatedView):
     def __init__(self, radio, user_id, page=0):
@@ -397,9 +390,7 @@ class AddAllFavoritesButton(discord.ui.Button):
         # Dispatch as action to wake up the engine if idle
         self.radio.dispatch(RadioAction.ADD_SONGS, q_songs, user=interaction.user)
             
-        await interaction.followup.send(f"{Icons.QUEUE} {t('added_all_to_queue')}", ephemeral=True)
-        from ui_utils import delayed_delete
-        asyncio.create_task(delayed_delete(interaction, self.radio.config.notification_timeout))
+        await respond(interaction, f"{Icons.QUEUE} {t('added_all_to_queue')}", delete_after=self.radio.config.notification_timeout)
 
 class ClearFavoritesButton(discord.ui.Button):
     def __init__(self, radio, user_id):
@@ -421,9 +412,7 @@ class ClearFavoritesButton(discord.ui.Button):
             self.view.data_list = []
             await self.view.refresh_view(interaction)
             
-        await interaction.followup.send(f"{Icons.SWEEP} {t('cleared_favorites')}", ephemeral=True)
-        from ui_utils import delayed_delete
-        asyncio.create_task(delayed_delete(interaction, self.radio.config.notification_timeout))
+        await respond(interaction, f"{Icons.SWEEP} {t('cleared_favorites')}", delete_after=self.radio.config.notification_timeout)
 
 class HistoryButton(discord.ui.Button):
     def __init__(self, radio, custom_id="history_button"):
@@ -544,7 +533,7 @@ class ClearHistoryButton(discord.ui.Button):
             self.view.data_list = []
             await self.view.refresh_view(interaction)
         
-        await interaction.followup.send(f"{Icons.SWEEP} History cleared!", ephemeral=True)
+        await respond(interaction, f"{Icons.SWEEP} History cleared!", delete_after=self.radio.config.notification_timeout)
 
 class QueueViewButton(discord.ui.Button):
     def __init__(self, radio):

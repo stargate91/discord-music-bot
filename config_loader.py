@@ -20,6 +20,7 @@ class Config:
     ui_settings: dict
     timings: dict
     defaults: dict
+    forbidden_bot_ids: list = field(default_factory=list)
     emojis: dict = field(default_factory=dict)
 
     @property
@@ -32,8 +33,6 @@ class Config:
     def afk_retry_seconds(self): return self.timings.get("afk_retry_seconds", 5)
     @property
     def solitary_timeout_seconds(self): return self.timings.get("solitary_timeout_seconds", 300)
-    @property
-    def idle_timeout_seconds(self): return self.timings.get("idle_timeout_seconds", 1200)
     @property
     def default_volume(self): return self.defaults.get("volume", 0.5)
     @property
@@ -149,5 +148,6 @@ def load_config(config_file: str = "config.json", instance_name: str = ""):
         ui_settings=data.get("ui_settings", {}),
         timings=data.get("timings", {}),
         defaults=data.get("defaults", {}),
+        forbidden_bot_ids=data.get("forbidden_bot_ids", []),
         emojis=data.get("emojis", {})
     )

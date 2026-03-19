@@ -18,53 +18,66 @@ class RadioPlayer:
         self.cleanup_ui = cleanup_ui_callback
         # Idle/Timeout constants
         self.solitary_timeout = self.config.solitary_timeout_seconds
-        self.idle_timeout = self.config.idle_timeout_seconds
         self.solitary_start = None
-        self.idle_start = None
+        self._voice_lock = asyncio.Lock()
         
         # Link the manager back to a refresh callback
         self.radio.on_state_change = self.update_ui
 
     async def ensure_voice(self) -> Optional[discord.VoiceClient]:
         """Ensures the bot is connected to the correct voice channel."""
-        guild = self.bot.get_guild(self.config.guild_id)
-        if not guild or not self.radio.voice_channel_id:
-            return None
-            
-        channel = guild.get_channel(self.radio.voice_channel_id)
-        if not channel:
-            return None
+        async with self._voice_lock:
+            guild = self.bot.get_guild(self.config.guild_id)
+            if not guild or not self.radio.voice_channel_id:
+                return None
+                
+            channel = guild.get_channel(self.radio.voice_channel_id)
+            if not channel:
+                log.warning(f"[VOICE] Target channel {self.radio.voice_channel_id} not found in guild {guild.name}")
+                return None
 
-        if guild.voice_client:
-            self.radio.voice = guild.voice_client
-            if self.radio.voice.channel.id != channel.id:
-                # Check if someone else is already there before moving
-                for member in channel.members:
-                    if member.bot and member.id != self.bot.user.id:
-                        log.info(f"[VOICE] Aborting move: Another bot ({member.name}) is already in {channel.name}")
-                        return None
-                await self.radio.voice.move_to(channel)
-        else:
+            if guild.voice_client:
+                if guild.voice_client.is_connected():
+                    self.radio.voice = guild.voice_client
+                    if self.radio.voice.channel.id != channel.id:
+                        log.info(f"[VOICE] Moving from {self.radio.voice.channel.name} to {channel.name}")
+                        await self.radio.voice.move_to(channel)
+                    return self.radio.voice
+                else:
+                    log.warning(f"[VOICE] Dead voice client found for guild {guild.name}. Cleaning up.")
+                    try:
+                        await guild.voice_client.disconnect(force=True)
+                    except:
+                        pass
+                    self.radio.voice = None
+
             # Check if someone else is already there before connecting
+            found_bot = None
             for member in channel.members:
                 if member.bot and member.id != self.bot.user.id:
-                    log.info(f"[VOICE] Aborting join: Another bot ({member.name}) is already in {channel.name}")
-                    # Reset state so we don't keep trying
-                    self.radio.voice_channel_id = None
-                    self.radio.status = RadioStatusEnum.IDLE
+                    found_bot = member
+                    break
+            
+            if found_bot:
+                log.info(f"[VOICE] Note: Another bot ({found_bot.name}) is in {channel.name}. Joining anyway.")
+            
+            # Check for specifically forbidden bots
+            for member in channel.members:
+                if member.bot and member.id in self.config.forbidden_bot_ids:
+                    log.warning(f"[VOICE] Forbidden bot {member.name} ({member.id}) detected in {channel.name}. Aborting join.")
                     return None
+            
             try:
-                # Use a shorter timeout (e.g. 20s) so we don't hang the loop for a full minute
-                # and reconnect=True to let discord.py handle the gateway details
-                self.radio.voice = await asyncio.wait_for(
-                    channel.connect(reconnect=True, timeout=20.0, self_deaf=True),
-                    timeout=25.0
-                )
-            except (asyncio.TimeoutError, discord.errors.ClientException) as e:
-                log.warning(f"[VOICE] Connection attempt timed out or failed: {e}")
+                log.info(f"[VOICE] Connecting to {channel.name} in guild {guild.name}...")
+                # Increase timeout to 30s as Discord Gateway can be slow on some networks (e.g. Windows)
+                self.radio.voice = await channel.connect(reconnect=True, timeout=30.0, self_deaf=True)
+                log.info(f"[VOICE] Successfully connected to {channel.name}")
+            except (asyncio.TimeoutError, discord.errors.ClientException, Exception) as e:
+                log.warning(f"[VOICE] Connection attempt failed: {type(e).__name__}: {e}")
                 self.radio.voice = None
                 return None
-        return self.radio.voice
+
+            return self.radio.voice
 
     async def run_loop(self):
         """Main player lifecycle loop."""
@@ -87,8 +100,6 @@ class RadioPlayer:
                 if self.radio.status in [RadioStatusEnum.IDLE, RadioStatusEnum.STOPPED, RadioStatusEnum.PAUSED]:
                     if await self._handle_idle_state(voice):
                         continue
-                else:
-                    self.idle_start = None
 
                 # 4. State: PLAYING (Song Selection & Start)
                 if self.radio.status == RadioStatusEnum.PLAYING:
@@ -105,13 +116,14 @@ class RadioPlayer:
 
     async def _handle_disconnected_state(self):
         """Logic when voice is not connected."""
+        self.solitary_start = None
         try:
             action, data = await asyncio.wait_for(self.radio.action_queue.get(), timeout=self.config.action_timeout)
             if action == RadioAction.JOIN:
                 self.radio.voice_channel_id = data
                 self.radio.status = RadioStatusEnum.PLAYING
             elif action == RadioAction.ADD_EXT_LINK:
-                await self.radio.add_external_link(data)
+                await self.radio.add_external_link(data, user=self.radio.last_user)
                 self.radio.status = RadioStatusEnum.PLAYING
                 await self.refresh_ui()
             elif action == RadioAction.ADD_SONGS:
@@ -145,17 +157,8 @@ class RadioPlayer:
 
     async def _handle_idle_state(self, voice) -> bool:
         """Logic when voice is connected but nothing is playing."""
-        if self.idle_start is None:
-            self.idle_start = asyncio.get_event_loop().time()
-        elif asyncio.get_event_loop().time() - self.idle_start >= self.idle_timeout:
-            log.info(f"Auto-disconnecting: Dynamic idle timeout ({self.idle_timeout}s).")
-            self.idle_start = None
-            await self._disconnect(voice)
-            return True
-
         try:
             action, data = await asyncio.wait_for(self.radio.action_queue.get(), timeout=self.config.action_timeout)
-            self.idle_start = None 
             self.solitary_start = None # Reset solitary timer on interaction
             
             if action == RadioAction.SET_VOLUME:
@@ -167,7 +170,7 @@ class RadioPlayer:
                 await self._disconnect(voice)
                 return True
             elif action == RadioAction.ADD_EXT_LINK:
-                await self.radio.add_external_link(data)
+                await self.radio.add_external_link(data, user=self.radio.last_user)
                 await self.refresh_ui()
             elif action == RadioAction.ADD_SONGS:
                 await self.radio.add_songs(data, user=self.radio.last_user)
@@ -181,23 +184,21 @@ class RadioPlayer:
                     self.radio.is_seeking = True
                     self.radio.seek_position = None # Just resume
             elif action == RadioAction.SKIP:
-                if self.radio.queue:
-                    # Just start playback, _start_playback will pop from queue
-                    return True
+                if self.radio.future_queue or self.radio.queue:
+                    self.radio.status = RadioStatusEnum.PLAYING
+                    return False
+                return True
             elif action == RadioAction.BACK:
-                if self.radio.history:
-                    # Move current back to queue if it exists
+                back_song = self.radio.history_manager.pop_latest()
+                if back_song:
                     if self.radio.current_song:
-                        self.radio.queue.insert(0, self.radio.current_song)
-                    
-                    # Get from history and REMOVE it from DB so it can be re-added later
-                    back_song = self.radio.history_manager.pop_latest()
-                    if back_song:
-                        self.radio.current_song = back_song
-                        self.radio.is_seeking = True
-                        self.radio.seek_position = None
-                        return True
-                return False
+                        self.radio.future_queue.insert(0, self.radio.current_song)
+                    self.radio.current_song = back_song
+                    self.radio.is_navigating = True
+                    self.radio.is_seeking = True # Prevent _start_playback from popping
+                    self.radio.status = RadioStatusEnum.PLAYING
+                    return False
+                return True
             elif action == RadioAction.SEEK:
                 log.info(f"[PLAYER] Idle Seeking to: {data}s")
                 self.radio.seek_position = data
@@ -219,22 +220,23 @@ class RadioPlayer:
         self.radio.current_song = None
         if voice: await voice.disconnect()
         if self.cleanup_ui: await self.cleanup_ui()
-        self.idle_start = None
+        self.solitary_start = None
 
     async def _start_playback(self, voice):
         """Prepares and starts audio playback."""
-        # 1. Skip if seeking/no song
+        # 1. Selection logic
         if not self.radio.current_song or not self.radio.is_seeking:
-            if self.radio.queue:
+            if self.radio.future_queue:
+                # Coming back from history browsing
+                self.radio.current_song = self.radio.future_queue.pop(0)
+                self.radio.is_navigating = True
+            elif self.radio.queue:
                 self.radio.current_song = self.radio.queue.pop(0)
-                self.radio.is_seeking = False
-                
-                # User wants current song in history as soon as it starts playing
-                self.radio.history_manager.add(self.radio.current_song)
+                self.radio.is_navigating = False
             else:
                 self.radio.status = RadioStatusEnum.IDLE
                 self.radio.current_song = None
-                self.radio.is_seeking = False
+                self.radio.is_navigating = False
                 await self.update_ui(None)
                 return
         
@@ -244,6 +246,11 @@ class RadioPlayer:
         if not source_path:
             self.radio.current_song = None
             return
+
+        # 2. History Recording (Only if not browsing)
+        # Move AFTER _resolve_source to ensure we have the real title
+        if not self.radio.is_navigating:
+            self.radio.history_manager.add(self.radio.current_song)
 
         # 2. Create FFmpeg Source
         audio_source = self._create_ffmpeg_source(source_path)
@@ -295,7 +302,16 @@ class RadioPlayer:
                 await self.update_ui(song)
                 from providers import resolve_any
                 resolved = await resolve_any(source_path, self.radio.providers)
-                if resolved: song.update(resolved)
+                if resolved:
+                    song.update(resolved)
+                    # Update cache with real metadata
+                    self.radio.db.set_cache(
+                        url=source_path,
+                        title=song.title,
+                        uploader=song.uploader or "Unknown",
+                        duration=song.duration,
+                        thumbnail_url=song.thumbnail_url or ""
+                    )
             
             if song.stream_url:
                 return song.stream_url
@@ -407,31 +423,24 @@ class RadioPlayer:
                 voice.stop()
                 return True
         elif action == RadioAction.BACK:
-            log.info("[PLAYER] Moving back to previous track.")
-            if self.radio.history:
-                # 1. Save current song to queue
-                if self.radio.current_song:
-                    # Avoid double entries in queue
-                    if not self.radio.queue or self.radio.queue[0].path != self.radio.current_song.path:
-                        self.radio.queue.insert(0, self.radio.current_song)
-                
-                # 2. Pop the "current" one from history first (since we just added it at start)
-                if self.radio.current_song:
-                    # Check if the latest in history is indeed the current song
-                    latest = self.radio.history_manager.get_all()
-                    if latest and latest[0].path == self.radio.current_song.path:
-                        self.radio.history_manager.pop_latest()
-                
-                # 3. Now get the REAL previous song
-                back_song = self.radio.history_manager.pop_latest()
-                if back_song:
-                    self.radio.current_song = back_song
-                    self.radio.seek_position = None
-                    self.radio.is_seeking = True
-                    voice.stop()
-                    return True
+            log.info("[PLAYER] Navigating back in history.")
             
-            # If no history or back track failed, just restart current
+            # 1. Undoplay current: remove it from history since it was added at start of playback
+            if not self.radio.is_navigating and self.radio.current_song:
+                self.radio.history_manager.pop_latest()
+                
+            # 2. Get the real previous song
+            back_song = self.radio.history_manager.pop_latest()
+            if back_song:
+                if self.radio.current_song:
+                    self.radio.future_queue.insert(0, self.radio.current_song)
+                self.radio.current_song = back_song
+                self.radio.is_navigating = True
+                self.radio.is_seeking = True
+                voice.stop()
+                return True
+            
+            # If no history, just restart current
             self.radio.seek_position = 0
             self.radio.is_seeking = True
             voice.stop()
@@ -448,7 +457,7 @@ class RadioPlayer:
             await self._disconnect(voice)
             return True
         elif action == RadioAction.ADD_EXT_LINK:
-            await self.radio.add_external_link(data)
+            await self.radio.add_external_link(data, user=self.radio.last_user)
             await self.refresh_ui()
             return False
         elif action == RadioAction.ADD_SONGS:

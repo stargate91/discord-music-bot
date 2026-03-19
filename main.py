@@ -97,15 +97,20 @@ async def main():
         except Exception as e:
             log.error(f"Error during on_ready: {e}")
 
-        # [Slash sync logic omitted for brevity as it remains the same]
+        # [Slash sync logic]
         try:
             guild_id = config.guild_id
             if guild_id and guild_id > 0:
                 target_guild = discord.Object(id=guild_id)
                 tree.copy_global_to(guild=target_guild)
+                if args.instance:
+                    # Jitter sync to avoid rate limits with multiple instances
+                    await asyncio.sleep(random.uniform(1.0, 5.0))
                 await tree.sync(guild=target_guild)
                 log.info(f"Slash commands synced to guild: {guild_id}")
             else:
+                if args.instance:
+                    await asyncio.sleep(random.uniform(1.0, 5.0))
                 await tree.sync()
                 log.info("Slash commands synced globally!")
         except Exception as e:

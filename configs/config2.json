@@ -7,6 +7,7 @@
     "sysadmin_role_id": 0,
     "default_language": "hu",
     "default_ui_mode": "full",
+    "forbidden_bot_ids": [1473068888055873697],
     "ffmpeg_path": "ffmpeg",
     "ytdlp_path": "yt-dlp",
     "languages": [
@@ -48,7 +49,6 @@
         "progress_update_seconds": 15,
         "afk_retry_seconds": 5,
         "solitary_timeout_seconds": 300,
-        "idle_timeout_seconds": 1200,
         "action_timeout": 5.0,
         "view_timeout": 60,
         "command_delete_delay": 1.5,

@@ -122,16 +122,13 @@ class RadioPlayer:
             if action == RadioAction.JOIN:
                 self.radio.voice_channel_id = data
                 self.radio.status = RadioStatusEnum.PLAYING
-            elif action == RadioAction.ADD_EXT_LINK:
-                await self.radio.add_external_link(data, user=self.radio.last_user)
-                self.radio.status = RadioStatusEnum.PLAYING
-                await self.refresh_ui()
-            elif action == RadioAction.ADD_SONGS:
-                await self.radio.add_songs(data, user=self.radio.last_user)
-                self.radio.status = RadioStatusEnum.PLAYING
-                await self.refresh_ui()
             elif action == RadioAction.DISCONNECT:
                 await self._disconnect(None)
+            else:
+                # Handle general state-agnostic actions
+                await self._handle_state_agnostic_action(action, data)
+                if action in [RadioAction.ADD_EXT_LINK, RadioAction.ADD_SONGS]:
+                    self.radio.status = RadioStatusEnum.PLAYING
         except asyncio.TimeoutError:
             pass
         except Exception as e:
@@ -164,17 +161,11 @@ class RadioPlayer:
             if action == RadioAction.SET_VOLUME:
                 self.radio.volume = data
                 return True
-            elif action == RadioAction.JOIN:
-                self.radio.voice_channel_id = data
             elif action == RadioAction.DISCONNECT:
                 await self._disconnect(voice)
                 return True
-            elif action == RadioAction.ADD_EXT_LINK:
-                await self.radio.add_external_link(data, user=self.radio.last_user)
-                await self.refresh_ui()
-            elif action == RadioAction.ADD_SONGS:
-                await self.radio.add_songs(data, user=self.radio.last_user)
-                await self.refresh_ui()
+            elif await self._handle_state_agnostic_action(action, data):
+                return True
             elif action == RadioAction.REPLAY:
                 # IMPORTANT: If we are STOPPED but have a current_song, we want to play it, not skip to next.
                 if self.radio.status == RadioStatusEnum.STOPPED and self.radio.current_song:
@@ -226,19 +217,42 @@ class RadioPlayer:
         """Prepares and starts audio playback."""
         # 1. Selection logic
         if not self.radio.current_song or not self.radio.is_seeking:
-            if self.radio.future_queue:
+            # If Loop Mode is ON and we have a current song, we just replay it
+            # EXCEPT if SKIP was the reason we are here.
+            # We can detect this if current_song is still set but is_seeking is False
+            # and we are not navigating.
+            
+            # Actually, the simplest way is to check if we SHOULD move to next.
+            if self.radio.loop_mode and self.radio.current_song and not self.radio.is_navigating:
+                log.info(f"[PLAYER] Loop Mode active. Replaying: {self.radio.current_song.title}")
+                # We keep the current_song
+                self.radio.is_seeking = True
+                self.radio.seek_position = 0
+            elif self.radio.future_queue:
                 # Coming back from history browsing
                 self.radio.current_song = self.radio.future_queue.pop(0)
                 self.radio.is_navigating = True
             elif self.radio.queue:
+                # If Loop Queue Mode is ON, we might want to put the old song back
+                if self.radio.loop_queue_mode and self.radio.current_song and not self.radio.is_navigating:
+                    # Add current song back to END of queue
+                    self.radio.queue.append(self.radio.current_song)
+                
                 self.radio.current_song = self.radio.queue.pop(0)
                 self.radio.is_navigating = False
             else:
-                self.radio.status = RadioStatusEnum.IDLE
-                self.radio.current_song = None
-                self.radio.is_navigating = False
-                await self.update_ui(None)
-                return
+                # Queue empty. Check if we should loop the final song or if loop_queue should put it back
+                if self.radio.loop_queue_mode and self.radio.current_song and not self.radio.is_navigating:
+                    # In loop_queue mode, the last song just finished, and it was already appended?
+                    # No, we just appended it above. If queue was empty, it's now in queue.
+                    # Loop back to start of function.
+                    self.radio.current_song = self.radio.queue.pop(0)
+                else:
+                    self.radio.status = RadioStatusEnum.IDLE
+                    self.radio.current_song = None
+                    self.radio.is_navigating = False
+                    await self.update_ui(None)
+                    return
         
         song = self.radio.current_song
         self.radio.is_seeking = False
@@ -369,6 +383,7 @@ class RadioPlayer:
         self.solitary_start = None # Reset solitary timer on interaction
         if action == RadioAction.SKIP:
             log.info("[PLAYER] Skipping current track.")
+            self.radio.is_navigating = True
             self.radio.is_seeking = False
             voice.stop()
             return True
@@ -456,12 +471,73 @@ class RadioPlayer:
         elif action == RadioAction.DISCONNECT:
             await self._disconnect(voice)
             return True
-        elif action == RadioAction.ADD_EXT_LINK:
+        elif await self._handle_state_agnostic_action(action, data):
+            return False
+        return False
+
+    async def _handle_state_agnostic_action(self, action: RadioAction, data: Any) -> bool:
+        """
+        Handles actions that don't depend on specific playback engine state.
+        Returns True if the action WAS handled.
+        """
+        if action == RadioAction.ADD_EXT_LINK:
             await self.radio.add_external_link(data, user=self.radio.last_user)
             await self.refresh_ui()
-            return False
+            return True
         elif action == RadioAction.ADD_SONGS:
             await self.radio.add_songs(data, user=self.radio.last_user)
             await self.refresh_ui()
-            return False
+            return True
+        elif action == RadioAction.REMOVE_FROM_QUEUE:
+            # data: Song
+            if data in self.radio.queue:
+                self.radio.queue.remove(data)
+            await self.refresh_ui()
+            return True
+        elif action == RadioAction.CLEAR_QUEUE:
+            self.radio.queue = []
+            await self.refresh_ui()
+            return True
+        elif action == RadioAction.MOVE_SONG:
+            # data: (Song, direction_int)
+            song, direction = data
+            try:
+                idx = self.radio.queue.index(song)
+                new_idx = idx + direction
+                if 0 <= new_idx < len(self.radio.queue):
+                    self.radio.queue[idx], self.radio.queue[new_idx] = self.radio.queue[new_idx], self.radio.queue[idx]
+            except ValueError: pass
+            await self.refresh_ui()
+            return True
+        elif action == RadioAction.TOGGLE_FAVORITE:
+            # data: (user_id, Song)
+            user_id, song = data
+            self.radio.fav_manager.toggle_favorite(user_id, song)
+            await self.refresh_ui()
+            return True
+        elif action == RadioAction.CLEAR_FAVORITES:
+            # data: user_id
+            self.radio.fav_manager.clear_favorites(data)
+            await self.refresh_ui()
+            return True
+        elif action == RadioAction.CLEAR_HISTORY:
+            self.radio.history_manager.clear()
+            await self.refresh_ui()
+            return True
+        elif action == RadioAction.LOOP:
+            self.radio.loop_mode = not self.radio.loop_mode
+            if self.radio.loop_mode: self.radio.loop_queue_mode = False # Mutually exclusive for simplicity
+            await self.refresh_ui()
+            return True
+        elif action == RadioAction.LOOP_QUEUE:
+            self.radio.loop_queue_mode = not self.radio.loop_queue_mode
+            if self.radio.loop_queue_mode: self.radio.loop_mode = False
+            await self.refresh_ui()
+            return True
+        elif action == RadioAction.SHUFFLE:
+            import random
+            random.shuffle(self.radio.queue)
+            await self.refresh_ui()
+            return True
+        
         return False

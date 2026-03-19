@@ -128,5 +128,18 @@
     "help_seek_desc": "Ugrás időponthoz (pp:mp).",
     "help_queue_desc": "Várólista megtekintése. (rövid: `q`)",
     "help_join_desc": "Csatlakozás a csatornádhoz. (rövid: `j`)",
-    "help_leave_desc": "Kilépés a csatornáról. (rövid: `d` vagy `l` parancsok)"
+    "help_leave_desc": "Kilépés a csatornáról. (rövid: `d` vagy `l` parancsok)",
+    "help_loop_desc": "Aktuális szám végtelenített lejátszása.",
+    "help_loopq_desc": "A teljes várólista végtelenített lejátszása.",
+    "help_shuffle_desc": "A várólista sorrendjének megkeverése. (rövid: `sh` vagy `shuffle` parancsok)",
+    "loop_enabled": "Végtelenített lejátszás bekapcsolva.",
+    "loop_disabled": "Végtelenített lejátszás kikapcsolva.",
+    "loop_queue_enabled": "Várólista végtelenítés bekapcsolva.",
+    "loop_queue_disabled": "Várólista végtelenítés kikapcsolva.",
+    "queue_shuffled": "Várólista megkeverve!",
+    "loop_toggle": "Végtelenített lejátszás állapota megváltozott.",
+    "loop_queue_toggle": "Várólista végtelenítés állapota megváltozott.",
+    "mode_label": "Mód",
+    "loop_track_label": "Szám ismétlése",
+    "loop_queue_label": "Várólista ismétlése"
 }

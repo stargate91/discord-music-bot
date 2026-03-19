@@ -128,5 +128,18 @@
     "help_seek_desc": "Seek to timestamp (mm:ss).",
     "help_queue_desc": "View the queue. (short: `q`)",
     "help_join_desc": "Join your voice channel. (short: `j`)",
-    "help_leave_desc": "Leave the channel. (short: `d` or `l` shortcuts)"
+    "help_leave_desc": "Leave the channel. (short: `d` or `l` shortcuts)",
+    "help_loop_desc": "Toggle looping for the current track.",
+    "help_loopq_desc": "Toggle looping for the entire queue.",
+    "help_shuffle_desc": "Randomize the current queue order. (short: `sh` or `shuffle`)",
+    "loop_enabled": "Track loop enabled.",
+    "loop_disabled": "Track loop disabled.",
+    "loop_queue_enabled": "Queue loop enabled.",
+    "loop_queue_disabled": "Queue loop disabled.",
+    "queue_shuffled": "Queue shuffled!",
+    "loop_toggle": "Track loop status changed.",
+    "loop_queue_toggle": "Queue loop status changed.",
+    "mode_label": "Mode",
+    "loop_track_label": "Loop: Track",
+    "loop_queue_label": "Loop: Queue"
 }

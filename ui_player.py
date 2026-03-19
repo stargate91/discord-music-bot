@@ -363,7 +363,10 @@ class HelpView:
             ("seek [time]", t("help_seek_desc")),
             ("queue", t("help_queue_desc")),
             ("join", t("help_join_desc")),
-            ("disconnect", t("help_leave_desc"))
+            ("disconnect", t("help_leave_desc")),
+            ("loop", t("help_loop_desc")),
+            ("loopq", t("help_loopq_desc")),
+            ("shuffle", t("help_shuffle_desc"))
         ]
         
         for cmd, desc in commands:
@@ -531,6 +534,16 @@ class NowPlayingView(BaseView):
         ]
         if source:
             info_lines.append(f"**{t('source')}:** {source}")
+            
+        # Display active Loop Mode
+        mode_text = None
+        if radio.loop_mode:
+            mode_text = t("loop_track_label")
+        elif radio.loop_queue_mode:
+            mode_text = t("loop_queue_label")
+            
+        if mode_text:
+            info_lines.append(f"**{t('mode_label')}:** {mode_text}")
         
         elapsed = int(radio.track_start_offset)
         if radio.track_start_time and radio.status == RadioStatusEnum.PLAYING:

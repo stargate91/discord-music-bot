@@ -51,6 +51,10 @@ class RadioManager:
         self.is_compact: bool = (config.default_ui_mode == "compact")
         self.show_queue: bool = False
         
+        # Modes
+        self.loop_mode: bool = False
+        self.loop_queue_mode: bool = False
+        
         # Progress Tracking
         self.track_start_time: Optional[float] = None
         self.track_start_offset: float = 0.0

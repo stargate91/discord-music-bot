@@ -4,6 +4,7 @@ from typing import Optional
 from radio_actions import RadioAction, RadioState as RadioStatusEnum
 from ui_translate import t
 from ui_utils import respond
+from ui_icons import Icons
 
 def setup_commands(tree: app_commands.CommandTree, radio):
     async def restricted_channel_check(interaction: discord.Interaction) -> bool:
@@ -155,3 +156,167 @@ def setup_commands(tree: app_commands.CommandTree, radio):
         from ui_search import FullQueueView
         view = FullQueueView(radio, page=0)
         await respond(interaction, view=view) # delete_after is None by default for windows
+
+    @tree.command(name="loop", description=t("help_loop_desc"))
+    async def loop(interaction: discord.Interaction):
+        if not radio.can_interact(interaction.user):
+            await respond(interaction, t("not_in_same_voice"), delete_after=radio.config.notification_timeout)
+            return
+        radio.dispatch(RadioAction.LOOP, user=interaction.user)
+        msg = t("loop_enabled") if not radio.loop_mode else t("loop_disabled")
+        await respond(interaction, f"{Icons.SYNC} {msg}", delete_after=radio.config.notification_timeout)
+
+    @tree.command(name="loopq", description=t("help_loopq_desc"))
+    async def loopq(interaction: discord.Interaction):
+        if not radio.can_interact(interaction.user):
+            await respond(interaction, t("not_in_same_voice"), delete_after=radio.config.notification_timeout)
+            return
+        radio.dispatch(RadioAction.LOOP_QUEUE, user=interaction.user)
+        msg = t("loop_queue_enabled") if not radio.loop_queue_mode else t("loop_queue_disabled")
+        await respond(interaction, f"{Icons.SYNC} {msg}", delete_after=radio.config.notification_timeout)
+
+    @tree.command(name="shuffle", description=t("help_shuffle_desc"))
+    async def shuffle(interaction: discord.Interaction):
+        if not radio.can_interact(interaction.user):
+            await respond(interaction, t("not_in_same_voice"), delete_after=radio.config.notification_timeout)
+            return
+        radio.dispatch(RadioAction.SHUFFLE, user=interaction.user)
+        await respond(interaction, f"{Icons.SWEEP} {t('queue_shuffled')}", delete_after=radio.config.notification_timeout)
+
+async def handle_prefix_commands(message: discord.Message, radio):
+    """Processes traditional ! prefix commands."""
+    if message.author.bot or not message.content:
+        return
+
+    config = radio.config
+    # Restricted to radio channel
+    if message.channel.id != config.radio_text_channel_id:
+        return
+
+    prefix = config.command_prefix
+    if not message.content.startswith(prefix):
+        return
+
+    # Simple parser
+    content = message.content[len(prefix):].strip()
+    if not content:
+        return
+
+    parts = content.split()
+    command = parts[0].lower()
+    args = parts[1:]
+
+    from logger import log
+    import asyncio
+
+    async def delayed_delete(msg):
+        await asyncio.sleep(config.command_delete_delay)
+        try:
+            await msg.delete()
+        except discord.Forbidden:
+            log.warning(f"Could not delete message from {msg.author}: Missing 'Manage Messages' permission.")
+        except:
+            pass
+
+    try:
+        # Start deletion in background with delay
+        asyncio.create_task(delayed_delete(message))
+
+        if command in ["play", "p"]:
+            if not message.author.voice:
+                await message.channel.send(f"{message.author.mention} " + t("no_permission"), delete_after=config.notification_timeout)
+            else:
+                query = " ".join(args).strip() if args else None
+                if not query:
+                    if radio.status == RadioStatusEnum.PAUSED:
+                        radio.dispatch(RadioAction.REPLAY, user=message.author)
+                    else:
+                        await message.channel.send(f"{message.author.mention} " + t("nothing_playing"), delete_after=config.notification_timeout)
+                else:
+                    if radio.voice_channel_id is None:
+                        radio.dispatch(RadioAction.JOIN, message.author.voice.channel.id, user=message.author)
+                    radio.dispatch(RadioAction.ADD_EXT_LINK, query, user=message.author)
+                    await message.channel.send(f"{message.author.mention} " + t("weblink_added"), delete_after=config.notification_timeout)
+
+        elif command == "stop":
+            radio.dispatch(RadioAction.STOP, user=message.author)
+            await message.channel.send(f"{message.author.mention} " + t("stopping"), delete_after=config.notification_timeout)
+
+        elif command in ["disconnect", "leave", "d", "l"]:
+            radio.dispatch(RadioAction.DISCONNECT, user=message.author)
+            await message.channel.send(f"{message.author.mention} " + t("severing"), delete_after=config.notification_timeout)
+
+        elif command in ["skip", "s"]:
+            if radio.queue:
+                radio.dispatch(RadioAction.SKIP, user=message.author)
+                await message.channel.send(f"{message.author.mention} " + t("forwarding"), delete_after=config.notification_timeout)
+            else:
+                await message.channel.send(f"{message.author.mention} " + t("no_next_track"), delete_after=config.notification_timeout)
+
+        elif command in ["back", "b"]:
+            if radio.history:
+                radio.dispatch(RadioAction.BACK, user=message.author)
+                await message.channel.send(f"{message.author.mention} " + t("back_label") + "...", delete_after=config.notification_timeout)
+            else:
+                await message.channel.send(f"{message.author.mention} " + t("no_prev_track"), delete_after=config.notification_timeout)
+
+        elif command in ["join", "j"]:
+            if message.author.voice:
+                radio.dispatch(RadioAction.JOIN, message.author.voice.channel.id, user=message.author)
+                await message.channel.send(f"{message.author.mention} " + f"{t('syncing')} ({message.author.voice.channel.name})", delete_after=config.notification_timeout)
+            else:
+                await message.channel.send(f"{message.author.mention} " + t("no_permission"), delete_after=config.notification_timeout)
+
+        elif command in ["volume", "v"] and args:
+            try:
+                vol = int(args[0])
+                if 0 <= vol <= 100:
+                    radio.dispatch(RadioAction.SET_VOLUME, vol / 100, user=message.author)
+                else:
+                    await message.channel.send(f"{message.author.mention} " + t("vol_range_error"), delete_after=config.notification_timeout)
+            except:
+                await message.channel.send(f"{message.author.mention} " + t("invalid_number"), delete_after=config.notification_timeout)
+
+        elif command in ["loop", "lt"]:
+            # Check if 'l' is leave or loop. Leave was defined as 'l' at line 218.
+            # I'll use 'loop' for loop and leave 'l' for leave to avoid breaking legacy?
+            # User said "loop a számot", so maybe just 'loop'.
+            radio.dispatch(RadioAction.LOOP, user=message.author)
+            await message.channel.send(f"{message.author.mention} {Icons.SYNC} {t('loop_toggle')}", delete_after=config.notification_timeout)
+
+        elif command in ["loopq", "lq"]:
+            radio.dispatch(RadioAction.LOOP_QUEUE, user=message.author)
+            await message.channel.send(f"{message.author.mention} {Icons.SYNC} {t('loop_queue_toggle')}", delete_after=config.notification_timeout)
+
+        elif command in ["shuffle", "sh"]:
+            radio.dispatch(RadioAction.SHUFFLE, user=message.author)
+            await message.channel.send(f"{message.author.mention} {Icons.SWEEP} {t('queue_shuffled')}", delete_after=config.notification_timeout)
+
+        elif command in ["queue", "q"]:
+            from ui_search import FullQueueView
+            view = FullQueueView(radio, page=0)
+            await message.channel.send(view=view, delete_after=config.view_timeout)
+
+        elif command in ["help", "h"]:
+            from ui_player import HelpView
+            view = HelpView(radio)
+            await message.channel.send(embed=view.get_embed(), delete_after=config.view_timeout)
+
+        elif command == "seek" and args:
+            if radio.current_song:
+                ts = args[0]
+                try:
+                    parts_ts = ts.split(":")
+                    if len(parts_ts) == 2:
+                        total = int(parts_ts[0]) * 60 + int(parts_ts[1])
+                    else:
+                        total = int(ts)
+                    radio.dispatch(RadioAction.SEEK, total, user=message.author)
+                    await message.channel.send(f"{message.author.mention} " + f"{t('jumping')} {ts}", delete_after=config.notification_timeout)
+                except:
+                    await message.channel.send(f"{message.author.mention} " + t("format_error"), delete_after=config.notification_timeout)
+            else:
+                await message.channel.send(f"{message.author.mention} " + t("no_current_track"), delete_after=5)
+
+    except Exception as e:
+        log.error(f"Error in prefix command {command}: {e}")

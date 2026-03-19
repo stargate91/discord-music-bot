@@ -1,4 +1,5 @@
 import discord
+from typing import Optional
 import asyncio
 from discord.ui import Modal, TextInput, ActionRow, Container, Section, TextDisplay, Separator
 from ui_translate import t
@@ -126,38 +127,40 @@ class SearchResultAddButton(discord.ui.Button):
         await respond(interaction, t("weblink_added"), delete_after=self.radio.config.notification_timeout)
 
 class FavoriteListButton(discord.ui.Button):
-    def __init__(self, radio, song: Song):
-        # We check the status for the initial state if possible
-        # but since it's a list, it's better to stay neutral or check on init
-        super().__init__(emoji=Icons.HEART_PLUS, style=discord.ButtonStyle.secondary)
+    def __init__(self, radio, song: Song, user_id: Optional[int] = None):
+        as_fav = False
+        if user_id:
+            as_fav = radio.fav_manager.is_favorite(user_id, song)
+            
+        emoji = Icons.HEART_MINUS if as_fav else Icons.HEART_PLUS
+        super().__init__(emoji=emoji, style=discord.ButtonStyle.secondary)
         self.radio = radio
         self.song = song
-
     @handle_ui_error
     async def callback(self, interaction: discord.Interaction):
-        # Perform the toggle in the manager
-        added = self.radio.fav_manager.toggle_favorite(interaction.user.id, self.song)
+        # Determine movement direction BEFORE dispatching the action 
+        # to ensure correct feedback regardless of how fast the engine is.
+        is_fav_now = self.radio.fav_manager.is_favorite(interaction.user.id, self.song)
+        will_be_added = not is_fav_now
+
+        # Dispatch the toggle action
+        self.radio.dispatch(RadioAction.TOGGLE_FAVORITE, (interaction.user.id, self.song), user=interaction.user)
         
-        # Update button emoji for immediate visual feedback
-        self.emoji = Icons.HEART_MINUS if added else Icons.HEART_PLUS
-        
-        # Defer so we can respond to the interaction
         if not interaction.response.is_done():
             await interaction.response.defer(ephemeral=True)
-            
+
         # Refresh the view state if possible
         try:
             if hasattr(self.view, 'refresh_view'):
-                # Prefer creating a new view instance for full UI stability
                 await self.view.refresh_view(interaction)
             else:
-                # Fallback to simple edit
                 await interaction.edit_original_response(view=self.view)
         except Exception as e:
             log.debug(f"[UI] Favorite refresh failed (non-critical): {e}")
 
-        icon = Icons.HEART_PLUS if added else Icons.HEART_MINUS
-        msg = t("added_to_fav") if added else t("removed_from_fav")
+        # Correct feedback based on state before dispatch
+        icon = Icons.HEART_PLUS if will_be_added else Icons.HEART_MINUS
+        msg = t("added_to_fav") if will_be_added else t("removed_from_fav")
         
         await respond(interaction, f"{icon} {msg}", delete_after=self.radio.config.notification_timeout)
 
@@ -194,7 +197,7 @@ class SearchResultsView(PaginatedView):
             
             row = ActionRow()
             row.add_item(SearchResultAddButton(radio, res))
-            row.add_item(FavoriteListButton(radio, res))
+            row.add_item(FavoriteListButton(radio, res, user_id=self.user.id if self.user else None))
             container.add_item(row)
             
         container.add_item(Separator())
@@ -404,7 +407,7 @@ class ClearFavoritesButton(discord.ui.Button):
 
     @handle_ui_error
     async def callback(self, interaction: discord.Interaction):
-        self.radio.fav_manager.clear_favorites(self.user_id)
+        self.radio.dispatch(RadioAction.CLEAR_FAVORITES, self.user_id, user=interaction.user)
         
         await interaction.response.defer()
         if hasattr(self.view, 'refresh_view'):
@@ -458,7 +461,7 @@ class HistoryView(PaginatedView):
                 
                 row = ActionRow()
                 row.add_item(SearchResultAddButton(radio, song))
-                row.add_item(FavoriteListButton(radio, song))
+                row.add_item(FavoriteListButton(radio, song, user_id=self.user.id if self.user else None))
                 container.add_item(row)
                 
         container.add_item(Separator())
@@ -522,8 +525,7 @@ class ClearHistoryButton(discord.ui.Button):
             await interaction.response.send_message(t("admin_only"), ephemeral=True)
             return
 
-        # Simple confirmation check would be nice, but for now direct clear
-        self.radio.history_manager.clear()
+        self.radio.dispatch(RadioAction.CLEAR_HISTORY, user=interaction.user)
         
         await interaction.response.defer()
         if hasattr(self.view, 'refresh_view'):
@@ -562,9 +564,7 @@ class RemoveFromQueueButton(discord.ui.Button):
     @handle_ui_error
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        if self.song in self.radio.queue:
-            self.radio.queue.remove(self.song)
-        await self.view.refresh_view(interaction)
+        self.radio.dispatch(RadioAction.REMOVE_FROM_QUEUE, self.song, user=interaction.user)
 
 class ClearQueueButton(discord.ui.Button):
     def __init__(self, radio):
@@ -574,8 +574,7 @@ class ClearQueueButton(discord.ui.Button):
     @handle_ui_error
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        self.radio.queue = []
-        await self.view.refresh_view(interaction)
+        self.radio.dispatch(RadioAction.CLEAR_QUEUE, user=interaction.user)
 
 class MoveUpButton(discord.ui.Button):
     def __init__(self, radio, song, is_first=False):
@@ -586,12 +585,7 @@ class MoveUpButton(discord.ui.Button):
     @handle_ui_error
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        try:
-            idx = self.radio.queue.index(self.song)
-            if idx > 0:
-                self.radio.queue[idx], self.radio.queue[idx-1] = self.radio.queue[idx-1], self.radio.queue[idx]
-        except ValueError: pass
-        await self.view.refresh_view(interaction)
+        self.radio.dispatch(RadioAction.MOVE_SONG, (self.song, -1), user=interaction.user)
 
 class MoveDownButton(discord.ui.Button):
     def __init__(self, radio, song, is_last=False):
@@ -602,12 +596,7 @@ class MoveDownButton(discord.ui.Button):
     @handle_ui_error
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        try:
-            idx = self.radio.queue.index(self.song)
-            if idx < len(self.radio.queue) - 1:
-                self.radio.queue[idx], self.radio.queue[idx+1] = self.radio.queue[idx+1], self.radio.queue[idx]
-        except ValueError: pass
-        await self.view.refresh_view(interaction)
+        self.radio.dispatch(RadioAction.MOVE_SONG, (self.song, 1), user=interaction.user)
 
 class FullQueueView(PaginatedView):
     def __init__(self, radio, page=0):

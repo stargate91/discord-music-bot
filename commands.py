@@ -183,8 +183,6 @@ def setup_commands(tree: app_commands.CommandTree, radio):
         radio.dispatch(RadioAction.SHUFFLE, user=interaction.user)
         await respond(interaction, f"{Icons.SWEEP} {t('queue_shuffled')}", delete_after=radio.config.notification_timeout)
 
-        radio.dispatch(RadioAction.RESTART, user=interaction.user)
-
     @tree.command(name="clearcache", description="Clears the local audio cache (Admin only)")
     async def clear_cache(interaction: discord.Interaction):
         if not radio.is_admin(interaction.user):

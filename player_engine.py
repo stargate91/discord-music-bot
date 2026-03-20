@@ -399,8 +399,8 @@ class RadioPlayer:
         # Fast seek MUST be the very first option before -i for input seek to work on streams
         before_opts_list = ["-nostdin"]
         
-        if self.radio.seek_position is not None:
-             before_opts_list.append(f"-ss {self.radio.seek_position}")
+        if self.radio.track_start_offset > 0:
+             before_opts_list.append(f"-ss {self.radio.track_start_offset}")
              
         if is_url:
             if user_agent:

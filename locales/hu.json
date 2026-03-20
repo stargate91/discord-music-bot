@@ -12,6 +12,7 @@
     "stopped": "LEÁLLÍTVA",
     "buffering": "BETÖLTÉS...",
     "presence_listening": "Hallgatja:",
+    "channel_status_playing": "🎶 {TITLE} 🎶",
     "presence_paused": "Megállítva",
     "artist": "Előadó",
     "uploader": "Feltöltő",

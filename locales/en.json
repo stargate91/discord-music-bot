@@ -12,6 +12,7 @@
     "stopped": "STOPPED",
     "buffering": "BUFFERING...",
     "presence_listening": "Listening to:",
+    "channel_status_playing": "🎶 {TITLE} 🎶",
     "presence_paused": "Paused",
     "artist": "Artist",
     "uploader": "Uploader",

@@ -22,6 +22,7 @@ class Config:
     defaults: dict
     forbidden_bot_ids: list = field(default_factory=list)
     emojis: dict = field(default_factory=dict)
+    update_voice_status: bool = False
 
     @property
     def embed_refresh_minutes(self): return self.timings.get("embed_refresh_minutes", 58)
@@ -92,6 +93,8 @@ class Config:
     def max_cache_size_mb(self): return self.defaults.get("max_cache_size_mb", 10240)
     @property
     def cache_expiry_days(self): return self.defaults.get("cache_expiry_days", 30)
+    @property
+    def ephemeral_cache(self): return self.defaults.get("ephemeral_cache", False)
 
 def load_config(config_file: str = "config.json", instance_name: str = ""):
     config_dir = os.path.join(os.path.dirname(__file__), "configs")
@@ -155,5 +158,6 @@ def load_config(config_file: str = "config.json", instance_name: str = ""):
         timings=data.get("timings", {}),
         defaults=data.get("defaults", {}),
         forbidden_bot_ids=data.get("forbidden_bot_ids", []),
-        emojis=data.get("emojis", {})
+        emojis=data.get("emojis", {}),
+        update_voice_status=data.get("update_voice_status", False)
     )

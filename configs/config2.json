@@ -7,6 +7,7 @@
     "sysadmin_role_id": 0,
     "default_language": "hu",
     "default_ui_mode": "full",
+    "update_voice_status": true,
     "forbidden_bot_ids": [1473068888055873697],
     "ffmpeg_path": "ffmpeg",
     "ytdlp_path": "yt-dlp",
@@ -66,7 +67,8 @@
         "log_level": "INFO",
         "audio_bitrate": "320k",
         "max_cache_size_mb": 10240,
-        "cache_expiry_days": 30
+        "cache_expiry_days": 30,
+        "ephemeral_cache": true
     },
     "emojis": {
         "RADIO": "<:audiolines:1483588920938725416>",

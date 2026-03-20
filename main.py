@@ -54,6 +54,11 @@ async def main():
     
     radio = RadioManager(config)
     
+    # Clear cache on startup if ephemeral cache is enabled
+    if config.ephemeral_cache:
+        log.info("[CACHE] Ephemeral cache enabled. Performing startup cleanup...")
+        radio.clear_cache()
+    
     # Initialize UI Manager (Replacement for global init_ui)
     ui_manager = UIManager(bot, config, radio)
     

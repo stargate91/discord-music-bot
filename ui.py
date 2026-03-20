@@ -14,7 +14,7 @@ class UIManager:
         self.config = config
         self.radio = radio
         self._ui_lock = asyncio.Lock()
-        self._last_cleanup = 0
+        self._last_cleanup = 0.0
         
         # Initialize sub-systems
         init_translate(radio)
@@ -37,8 +37,9 @@ class UIManager:
             
             if not self.bot or self.bot.is_closed(): return
             
-            # 1. Presence Update
+            # 1. Presence & Channel Status Updates
             await self._update_presence(song)
+            await self._update_channel_status(song)
 
             channel = self.bot.get_channel(self.config.radio_text_channel_id)
             if not channel:
@@ -83,6 +84,37 @@ class UIManager:
                 await self.bot.change_presence(activity=discord.Game(name=msg))
         except Exception as e:
             log.debug(f"Presence update failed: {e}")
+
+    async def _update_channel_status(self, song: Song | None):
+        """Updates the Voice Channel's status text (if enabled)."""
+        if not self.config.update_voice_status:
+            return
+            
+        try:
+            if not self.radio.voice_channel_id:
+                return
+                
+            channel = self.bot.get_channel(self.radio.voice_channel_id)
+            if not channel:
+                channel = await self.bot.fetch_channel(self.radio.voice_channel_id)
+                
+            if not channel or not isinstance(channel, discord.VoiceChannel):
+                return
+
+            if self.radio.status == RadioStatusEnum.PLAYING and song:
+                status_text = t('channel_status_playing', TITLE=song.title)
+            else:
+                status_text = None # Clear status when not playing or idle
+
+            # Basic rate limit protection: only update if it actually changed
+            # Note: channel.status availability depends on discord.py 2.4+
+            current_status = getattr(channel, 'status', 'UNKNOWN_ATTR')
+            if current_status == 'UNKNOWN_ATTR' or current_status != status_text:
+                await channel.edit(status=status_text)
+                
+        except Exception as e:
+            # We use debug here as missing permissions are common and shouldn't spam logs
+            log.debug(f"Voice channel status update failed: {e}")
 
     async def _cleanup_stray_messages(self, channel, force=False):
         now = asyncio.get_event_loop().time()

@@ -410,6 +410,27 @@ class RadioManager:
             log.error(f"[CACHE] Error clearing cache: {e}")
             return 0
 
+    def delete_cache_file(self, song: Song):
+        """Deletes the local cache file for a specific song."""
+        if not song or not song.path: return
+        
+        path = self.get_cache_path(song)
+        if path and os.path.exists(path):
+            try:
+                os.remove(path)
+                log.info(f"[CACHE] Ephemeral deletion: {song.title}")
+                # Reset local_path in DB
+                self.db.set_cache(
+                    url=song.path,
+                    title=song.title,
+                    uploader=song.uploader or "Unknown",
+                    duration=song.duration,
+                    thumbnail_url=song.thumbnail_url or "",
+                    local_path=None
+                )
+            except Exception as e:
+                log.warning(f"[CACHE] Could not delete ephemeral file {path}: {e}")
+
     def is_admin(self, user: discord.Member | discord.User) -> bool:
         if not isinstance(user, discord.Member):
             return False

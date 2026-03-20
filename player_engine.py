@@ -346,6 +346,9 @@ class RadioPlayer:
 
         if not self.radio.is_seeking:
             self.radio.track_start_offset = 0.0
+            # Ephemeral cache: delete if enabled
+            if self.config.ephemeral_cache:
+                self.radio.delete_cache_file(song)
         self.radio.track_start_time = None
         audio_source.cleanup()
 

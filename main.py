@@ -159,6 +159,10 @@ async def main():
             voice_client = guild.voice_client
             
             if target_channel:
+                if old_channel and old_channel.id != target_channel.id:
+                    # Clear status of the old channel if we moved
+                    await ui_manager.clear_voice_status(old_channel.id)
+                    
                 if not old_channel or old_channel.id != target_channel.id:
                     radio.voice_channel_id = target_channel.id
                     radio.voice = voice_client
@@ -167,11 +171,15 @@ async def main():
                 # We got a disconnect event. Only clear state if we ARE actually disconnected.
                 # Sometimes Discord sends transient None channels while switching.
                 if not voice_client or not voice_client.is_connected():
+                    prev_channel_id = old_channel.id if old_channel else radio.voice_channel_id
                     radio.voice_channel_id = None
                     radio.voice = None
                     radio.status = RadioStatusEnum.IDLE
                     radio.current_song = None
                     await ui_manager.update_now_playing(None)
+                    
+                    if prev_channel_id:
+                        await ui_manager.clear_voice_status(prev_channel_id)
 
     @bot.event
     async def on_message(message: discord.Message):

@@ -20,12 +20,12 @@ class UIManager:
         init_translate(radio)
         init_player_ui(bot, config, self.update_now_playing)
 
-    async def update_now_playing(self, song: Song | None):
+    async def update_now_playing(self, song: Song | None, force_channel_id: int | None = None):
         """Public entry point for UI updates with locking."""
         async with self._ui_lock:
-            await self._update_ui_internal(song)
+            await self._update_ui_internal(song, force_channel_id=force_channel_id)
 
-    async def _update_ui_internal(self, song: Song | None):
+    async def _update_ui_internal(self, song: Song | None, force_channel_id: int | None = None):
         """Internal UI rendering logic."""
         try:
             # Handle potential dict fallback from older code
@@ -39,7 +39,7 @@ class UIManager:
             
             # 1. Presence & Channel Status Updates
             await self._update_presence(song)
-            await self._update_channel_status(song)
+            await self._update_channel_status(song, force_channel_id=force_channel_id)
 
             channel = self.bot.get_channel(self.config.radio_text_channel_id)
             if not channel:
@@ -85,18 +85,19 @@ class UIManager:
         except Exception as e:
             log.debug(f"Presence update failed: {e}")
 
-    async def _update_channel_status(self, song: Song | None):
+    async def _update_channel_status(self, song: Song | None, force_channel_id: int | None = None):
         """Updates the Voice Channel's status text (if enabled)."""
         if not self.config.update_voice_status:
             return
             
         try:
-            if not self.radio.voice_channel_id:
+            target_id = force_channel_id or self.radio.voice_channel_id
+            if not target_id:
                 return
                 
-            channel = self.bot.get_channel(self.radio.voice_channel_id)
+            channel = self.bot.get_channel(target_id)
             if not channel:
-                channel = await self.bot.fetch_channel(self.radio.voice_channel_id)
+                channel = await self.bot.fetch_channel(target_id)
                 
             if not channel or not isinstance(channel, discord.VoiceChannel):
                 return
@@ -229,3 +230,8 @@ class UIManager:
     async def refresh_all_uis(self):
         """Triggers a lock-safe update of the current UI state."""
         await self.update_now_playing(self.radio.current_song)
+
+    async def clear_voice_status(self, channel_id: int):
+        """Public method to clear the status of a specific voice channel."""
+        async with self._ui_lock:
+            await self._update_channel_status(None, force_channel_id=channel_id)

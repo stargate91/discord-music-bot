@@ -63,7 +63,10 @@
         "history_limit": 50,
         "search_limit": 20,
         "database_path": "data/radio.db",
-        "log_level": "DEBUG"
+        "log_level": "DEBUG",
+        "audio_bitrate": "320k",
+        "max_cache_size_mb": 10240,
+        "cache_expiry_days": 30
     },
     "emojis": {
         "RADIO": "<:audiolines:1483938716488695889>",

@@ -8,6 +8,7 @@ from ui_utils import format_duration, respond
 from radio_actions import RadioAction, RadioState as RadioStatusEnum
 from core.models import Song
 from ui_theme import Theme
+from logger import log
 
 _update_callback = None
 _bot_ref = None
@@ -262,11 +263,19 @@ class VolumeModal(Modal):
 
 class FavoriteToggleButton(discord.ui.Button):
     def __init__(self, radio, song: Song | None):
-        # We start with HEART_PLUS / fav_add_label by default as a "Call to Action"
-        # Since it's a shared view, we don't know which user's state to show until click.
+        # Determine initial favorite state based on the requester or the last active user
+        is_fav = False
+        target_user_id = (song.user_id if song else None) or (str(radio.last_user.id) if radio.last_user else None)
+        
+        if song and target_user_id:
+            is_fav = radio.fav_manager.is_favorite(target_user_id, song)
+            
+        emoji = Icons.HEART_MINUS if is_fav else Icons.HEART_PLUS
+        label = None if radio.is_compact else (t('fav_remove_label') if is_fav else t('fav_add_label'))
+        
         super().__init__(
-            label=None if radio.is_compact else t('fav_add_label'),
-            emoji=Icons.HEART_PLUS,
+            label=label,
+            emoji=emoji,
             style=discord.ButtonStyle.secondary,
             custom_id="player:favorite_toggle",
             disabled=(not song or song.is_resolving)
@@ -481,6 +490,8 @@ class NowPlayingView(BaseView):
             accent_color = Theme.PAUSED
         elif radio.status == RadioStatusEnum.STOPPED:
             accent_color = Theme.STOPPED
+        elif radio.status == RadioStatusEnum.BUFFERING:
+            accent_color = Theme.BUFFERING
         else:
             accent_color = Theme.IDLE
 
@@ -489,6 +500,8 @@ class NowPlayingView(BaseView):
             status_text = t("paused")
         elif radio.status == RadioStatusEnum.STOPPED:
             status_text = t("stopped")
+        elif radio.status == RadioStatusEnum.BUFFERING:
+            status_text = t("buffering")
         elif radio.status == RadioStatusEnum.IDLE:
             status_text = t("idle")
 
@@ -519,6 +532,8 @@ class NowPlayingView(BaseView):
             current_status_icon = Icons.PAUSE
         elif radio.status == RadioStatusEnum.STOPPED:
             current_status_icon = Icons.STOP
+        elif radio.status == RadioStatusEnum.BUFFERING:
+            current_status_icon = Icons.BUFFERING
         elif radio.status == RadioStatusEnum.IDLE:
             current_status_icon = Icons.IDLE
 

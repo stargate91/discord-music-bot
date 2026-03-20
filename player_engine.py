@@ -1,3 +1,5 @@
+import os
+import time
 import asyncio
 import discord
 from typing import Optional, Callable, Dict, Any
@@ -20,6 +22,7 @@ class RadioPlayer:
         self.solitary_timeout = self.config.solitary_timeout_seconds
         self.solitary_start = None
         self._voice_lock = asyncio.Lock()
+        self.last_cache_cleanup = 0.0
         
         # Link the manager back to a refresh callback
         self.radio.on_state_change = self.update_ui
@@ -105,7 +108,12 @@ class RadioPlayer:
                 if self.radio.status == RadioStatusEnum.PLAYING:
                     await self._start_playback(voice)
                 
-                # 5. Safety sleep to prevent busy-waiting
+                # 5. Periodic cache cleanup
+                if time.time() - self.last_cache_cleanup > 3600:
+                    self.radio.cleanup_cache()
+                    self.last_cache_cleanup = time.time()
+
+                # 6. Safety sleep to prevent busy-waiting
                 await asyncio.sleep(self.config.player_loop_sleep)
 
             except Exception as e:
@@ -180,11 +188,14 @@ class RadioPlayer:
                     return False
                 return True
             elif action == RadioAction.BACK:
-                back_song = self.radio.history_manager.pop_latest()
+                # Use pointer for non-destructive back
+                next_ptr = self.radio.history_ptr + (1 if self.radio.current_song else 0)
+                back_song = self.radio.history_manager.get_latest(offset=next_ptr)
                 if back_song:
                     if self.radio.current_song:
                         self.radio.future_queue.insert(0, self.radio.current_song)
                     self.radio.current_song = back_song
+                    self.radio.history_ptr = next_ptr
                     self.radio.is_navigating = True
                     self.radio.is_seeking = True # Prevent _start_playback from popping
                     self.radio.status = RadioStatusEnum.PLAYING
@@ -232,6 +243,7 @@ class RadioPlayer:
                 # Coming back from history browsing
                 self.radio.current_song = self.radio.future_queue.pop(0)
                 self.radio.is_navigating = True
+                self.radio.history_ptr -= 1
             elif self.radio.queue:
                 # If Loop Queue Mode is ON, we might want to put the old song back
                 if self.radio.loop_queue_mode and self.radio.current_song and not self.radio.is_navigating:
@@ -240,6 +252,7 @@ class RadioPlayer:
                 
                 self.radio.current_song = self.radio.queue.pop(0)
                 self.radio.is_navigating = False
+                self.radio.history_ptr = 0
             else:
                 # Queue empty. Check if we should loop the final song or if loop_queue should put it back
                 if self.radio.loop_queue_mode and self.radio.current_song and not self.radio.is_navigating:
@@ -251,12 +264,33 @@ class RadioPlayer:
                     self.radio.status = RadioStatusEnum.IDLE
                     self.radio.current_song = None
                     self.radio.is_navigating = False
+                    self.radio.history_ptr = 0
                     await self.update_ui(None)
                     return
         
         song = self.radio.current_song
+        
+        # Set status to BUFFERING during resolution
+        self.radio.status = RadioStatusEnum.BUFFERING
+        await self.update_ui(song)
+        
+        # If we are seeking or replaying the same song, force a fresh URL for external streams
+        if self.radio.is_seeking and song and song.is_external:
+            log.info(f"[PLAYER] Re-resolving stream for: {song.title}")
+            song.stream_url = None
+            
         self.radio.is_seeking = False
-        source_path = await self._resolve_source(song)
+        
+        # Check cache before resolving stream
+        if self.radio.is_cached(song):
+            source_path = self.radio.get_cache_path(song)
+            log.info(f"[CACHE] Using local file for: {song.title}")
+        else:
+            source_path = await self._resolve_source(song)
+            # Start background download for next time
+            if song.is_external:
+                await self.radio.start_cache_download(song)
+                
         if not source_path:
             self.radio.current_song = None
             return
@@ -266,11 +300,7 @@ class RadioPlayer:
         if not self.radio.is_navigating:
             self.radio.history_manager.add(self.radio.current_song)
 
-        # 2. Create FFmpeg Source
-        audio_source = self._create_ffmpeg_source(source_path)
-        
         # 3. Play and Monitor
-        self.radio.track_start_time = asyncio.get_event_loop().time()
         self.radio.track_start_offset = self.radio.seek_position or 0.0
         self.radio.seek_position = None
         
@@ -288,6 +318,12 @@ class RadioPlayer:
         while voice.is_playing() or voice.is_paused():
             await asyncio.sleep(0.1)
         
+        self.radio.track_start_time = asyncio.get_event_loop().time()
+        self.radio.status = RadioStatusEnum.PLAYING
+        
+        # 2. Create FFmpeg Source (moved down to ensure metadata is ready)
+        audio_source = self._create_ffmpeg_source(source_path, song)
+        
         voice.play(audio_source, after=after_playing)
         log.info(f"[PLAYER] Started playing: {song.uploader} - {song.title} ({song.duration}s)")
         await self.update_ui(song)
@@ -295,21 +331,41 @@ class RadioPlayer:
         # 4. Interactive loop during playback
         await self._playback_monitor_loop(voice, song, done)
         
-        # 5. Safety: Wait for the voice player thread to fully exit before cleaning up
-        # This prevents the "read of closed file" error during SKIP/STOP/SEEK
-        await done.wait()
+        # 5. Safety: Wait for the voice player thread to fully exit.
+        # We use a timeout to prevent deadlocks if the thread is stuck in a blocking read (e.g. hung FFmpeg).
+        try:
+            await asyncio.wait_for(done.wait(), timeout=3.0)
+        except asyncio.TimeoutError:
+            log.warning(f"[PLAYER] Playback thread for \"{song.title}\" did not exit within 3s. Forcing cleanup.")
 
         # 6. Cleanup track state
-        if not done.is_set(): # This part is now technically redundant due to await above but kept for logic
-            log.info(f"[PLAYER] Monitor loop broke before track finished: {song.title}")
+        if not done.is_set(): 
+            log.info(f"[PLAYER] Monitor loop broke or timed out: {song.title}")
         else:
             log.info(f"[PLAYER] Track finished normally: {song.title}")
 
+        if not self.radio.is_seeking:
+            self.radio.track_start_offset = 0.0
         self.radio.track_start_time = None
-        self.radio.track_start_offset = 0.0
         audio_source.cleanup()
 
     async def _resolve_source(self, song: Song) -> Optional[str]:
+        # If it's already a local path, just return it
+        if os.path.exists(song.path):
+            return song.path
+
+        # Wait if song is currently being resolved by a background task (e.g. add_external_link)
+        if song.is_resolving:
+            log.info(f"[PLAYER] Waiting for background resolution: {song.title}")
+            retry_count = 0
+            while song.is_resolving and retry_count < 20: # Wait up to 10 seconds
+                await asyncio.sleep(0.5)
+                retry_count += 1
+
+        # Check for cached local file first
+        if self.radio.is_cached(song):
+            return self.radio.get_cache_path(song)
+
         source_path = song.path
         if song.is_external:
             if not song.stream_url or song.is_resolving:
@@ -332,22 +388,46 @@ class RadioPlayer:
             return None
         return source_path
 
-    def _create_ffmpeg_source(self, source_path: str):
-        # Configurable reconnect options for YouTube/SoundCloud
-        reconnect_opts = self.config.ffmpeg_reconnect_options
-        # Add User-Agent and probe settings to FFmpeg as well
-        user_agent = self.config.user_agent
+    def _create_ffmpeg_source(self, source_path: str, song: Optional[Song] = None):
+        # Determine if it's a URL or a local file
+        is_url = source_path.startswith("http")
         
-        before_opts = f"-nostdin {reconnect_opts} -user_agent \"{user_agent}\" -analyzeduration 20M -probesize 20M"
+        # FFmpeg flags for better stream stability
+        reconnect_opts = self.config.ffmpeg_reconnect_options if is_url else ""
+        user_agent = self.config.user_agent if is_url else ""
+        
+        # Fast seek MUST be the very first option before -i for input seek to work on streams
+        before_opts_list = ["-nostdin"]
+        
         if self.radio.seek_position is not None:
-            before_opts += f" -ss {self.radio.seek_position}"
+             before_opts_list.append(f"-ss {self.radio.seek_position}")
+             
+        if is_url:
+            if user_agent:
+                before_opts_list.append(f"-user_agent \"{user_agent}\"")
+            if reconnect_opts:
+                before_opts_list.append(reconnect_opts)
+            
+            # SoundCloud specific fixes for silent streams / HLS
+            is_soundcloud = "soundcloud.com" in source_path or (song and song.webpage_url and "soundcloud.com" in song.webpage_url)
+            if is_soundcloud:
+                before_opts_list.append("-headers \"Referer: https://soundcloud.com/\"")
+                before_opts_list.append("-allowed_extensions ALL")
+                
+            before_opts_list.extend(["-analyzeduration 10M", "-probesize 10M"])
+        
+        before_opts = " ".join(before_opts_list)
         
         filter_chain = f"volume={self.radio.volume}"
+        # We use libopus encoder in FFmpeg to produce a stream that discord.py can send directly.
+        # This is more CPU efficient for the machine as it avoids dual encoding.
+        options = f'-vn -filter:a "{filter_chain}" -c:a libopus -b:a {self.config.audio_bitrate} -ar 48000 -ac 2 -f opus'
+        
         return discord.FFmpegOpusAudio(
             source_path,
             executable=self.config.ffmpeg_path,
             before_options=before_opts,
-            options=f'-vn -filter:a "{filter_chain}"'
+            options=options
         )
 
     async def _playback_monitor_loop(self, voice, song, done):
@@ -440,16 +520,15 @@ class RadioPlayer:
         elif action == RadioAction.BACK:
             log.info("[PLAYER] Navigating back in history.")
             
-            # 1. Undoplay current: remove it from history since it was added at start of playback
-            if not self.radio.is_navigating and self.radio.current_song:
-                self.radio.history_manager.pop_latest()
-                
-            # 2. Get the real previous song
-            back_song = self.radio.history_manager.pop_latest()
+            # Use pointer for non-destructive back
+            next_ptr = self.radio.history_ptr + (1 if self.radio.current_song else 0)
+            back_song = self.radio.history_manager.get_latest(offset=next_ptr)
+
             if back_song:
                 if self.radio.current_song:
                     self.radio.future_queue.insert(0, self.radio.current_song)
                 self.radio.current_song = back_song
+                self.radio.history_ptr = next_ptr
                 self.radio.is_navigating = True
                 self.radio.is_seeking = True
                 voice.stop()
@@ -522,6 +601,12 @@ class RadioPlayer:
             return True
         elif action == RadioAction.CLEAR_HISTORY:
             self.radio.history_manager.clear()
+            self.radio.history_ptr = 0
+            self.radio.is_navigating = False
+            await self.refresh_ui()
+            return True
+        elif action == RadioAction.CLEAR_CACHE:
+            self.radio.clear_cache()
             await self.refresh_ui()
             return True
         elif action == RadioAction.LOOP:
@@ -538,6 +623,11 @@ class RadioPlayer:
             import random
             random.shuffle(self.radio.queue)
             await self.refresh_ui()
+            return True
+        elif action == RadioAction.RESTART:
+            log.info("[PLAYER] Restart action received. Triggering bot reboot...")
+            os.environ["BOT_RESTART"] = "1"
+            await self.bot.close()
             return True
         
         return False

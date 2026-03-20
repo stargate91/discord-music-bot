@@ -20,14 +20,15 @@ class YTDLPProvider(MusicProvider):
 
     async def _resolve_internal(self, url: str, playlist: bool = False) -> Optional[Dict[str, Any]]:
         try:
+            referer = "https://soundcloud.com/" if "soundcloud.com" in url else "https://www.google.com"
             cmd = [
                 self.ytdlp_path, 
                 "-j", 
-                "-f", "bestaudio/best",
+                "-f", "bestaudio[ext=mp3]/bestaudio/best",
                 "--no-playlist", 
                 "--flat-playlist",
                 "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                "--referer", "https://www.google.com",
+                "--referer", referer,
                 url
             ]
                  
@@ -75,12 +76,13 @@ class YTDLPProvider(MusicProvider):
 
     async def resolve_playlist(self, url: str) -> list[Dict[str, Any]]:
         try:
+            referer = "https://soundcloud.com/" if "soundcloud.com" in url else "https://www.google.com"
             cmd = [
                 self.ytdlp_path, 
                 "-j", 
                 "--flat-playlist",
                 "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                "--referer", "https://www.google.com",
+                "--referer", referer,
                 url
             ]
                  

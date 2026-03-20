@@ -552,7 +552,7 @@ class QueueViewButton(discord.ui.Button):
 
     @handle_ui_error
     async def callback(self, interaction: discord.Interaction):
-        view = FullQueueView(self.radio, page=0)
+        view = FullQueueView(self.radio, page=0, user=interaction.user)
         await interaction.response.send_message(view=view, ephemeral=True)
 
 class RemoveFromQueueButton(discord.ui.Button):
@@ -599,11 +599,12 @@ class MoveDownButton(discord.ui.Button):
         self.radio.dispatch(RadioAction.MOVE_SONG, (self.song, 1), user=interaction.user)
 
 class FullQueueView(PaginatedView):
-    def __init__(self, radio, page=0):
+    def __init__(self, radio, page=0, user: Optional[discord.Member | discord.User] = None):
         # Force all items to be Song objects if they are dicts
         queue = [Song.from_dict(r) if isinstance(r, dict) else r for r in radio.queue]
         # 6 tracks per page (configurable)
         super().__init__(radio, queue, items_per_page=radio.config.queue_items_per_page, page=page)
+        self.user = user
         container = Container(accent_color=Theme.PRIMARY)
         container.add_item(TextDisplay(f"### {Icons.QUEUE} {t('queue_label')}"))
         container.add_item(Separator())
@@ -631,7 +632,7 @@ class FullQueueView(PaginatedView):
                 row.add_item(MoveUpButton(radio, song, is_first=is_first))
                 row.add_item(MoveDownButton(radio, song, is_last=is_last))
                 row.add_item(RemoveFromQueueButton(radio, song))
-                row.add_item(FavoriteListButton(radio, song))
+                row.add_item(FavoriteListButton(radio, song, user_id=self.user.id if self.user else None))
                 container.add_item(row)
                 
         container.add_item(TextDisplay(self.pagination_info))
@@ -671,5 +672,5 @@ class FullQueueView(PaginatedView):
         self.add_item(container)
 
     async def refresh_view(self, interaction):
-        new_view = FullQueueView(self.radio, page=self.current_page)
+        new_view = FullQueueView(self.radio, page=self.current_page, user=self.user)
         await interaction.edit_original_response(view=new_view)

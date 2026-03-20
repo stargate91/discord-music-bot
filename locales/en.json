@@ -10,6 +10,7 @@
     "paused": "PAUSED",
     "idle": "IDLE",
     "stopped": "STOPPED",
+    "buffering": "BUFFERING...",
     "presence_listening": "Listening to:",
     "presence_paused": "Paused",
     "artist": "Artist",
@@ -141,5 +142,7 @@
     "loop_queue_toggle": "Queue loop status changed.",
     "mode_label": "Mode",
     "loop_track_label": "Loop: Track",
-    "loop_queue_label": "Loop: Queue"
+    "loop_queue_label": "Loop: Queue",
+    "restarting": "Restarting bot...",
+    "help_restart_desc": "Restarts the bot instance (Admins only)."
 }

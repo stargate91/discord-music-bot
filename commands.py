@@ -154,7 +154,7 @@ def setup_commands(tree: app_commands.CommandTree, radio):
             await respond(interaction, t("not_in_same_voice"), delete_after=radio.config.notification_timeout)
             return
         from ui_search import FullQueueView
-        view = FullQueueView(radio, page=0)
+        view = FullQueueView(radio, page=0, user=interaction.user)
         await respond(interaction, view=view) # delete_after is None by default for windows
 
     @tree.command(name="loop", description=t("help_loop_desc"))
@@ -182,6 +182,18 @@ def setup_commands(tree: app_commands.CommandTree, radio):
             return
         radio.dispatch(RadioAction.SHUFFLE, user=interaction.user)
         await respond(interaction, f"{Icons.SWEEP} {t('queue_shuffled')}", delete_after=radio.config.notification_timeout)
+
+        radio.dispatch(RadioAction.RESTART, user=interaction.user)
+
+    @tree.command(name="clearcache", description="Clears the local audio cache (Admin only)")
+    async def clear_cache(interaction: discord.Interaction):
+        if not radio.is_admin(interaction.user):
+            await respond(interaction, t("admin_only"), ephemeral=True)
+            return
+        
+        await interaction.response.defer(ephemeral=True)
+        count = radio.clear_cache()
+        await respond(interaction, f"Cache cleared: {count} files removed.", ephemeral=True)
 
 async def handle_prefix_commands(message: discord.Message, radio):
     """Processes traditional ! prefix commands."""
@@ -294,13 +306,27 @@ async def handle_prefix_commands(message: discord.Message, radio):
 
         elif command in ["queue", "q"]:
             from ui_search import FullQueueView
-            view = FullQueueView(radio, page=0)
+            view = FullQueueView(radio, page=0, user=message.author)
             await message.channel.send(view=view, delete_after=config.view_timeout)
 
         elif command in ["help", "h"]:
             from ui_player import HelpView
             view = HelpView(radio)
             await message.channel.send(embed=view.get_embed(), delete_after=config.view_timeout)
+
+        elif command == "restart":
+            if radio.is_admin(message.author):
+                await message.channel.send(f"{message.author.mention} {t('restarting')}")
+                radio.dispatch(RadioAction.RESTART, user=message.author)
+            else:
+                await message.channel.send(f"{message.author.mention} " + t("admin_only"), delete_after=5)
+
+        elif command == "clearcache":
+            if radio.is_admin(message.author):
+                count = radio.clear_cache()
+                await message.channel.send(f"{message.author.mention} Cache cleared: {count} files removed.", delete_after=config.notification_timeout)
+            else:
+                await message.channel.send(f"{message.author.mention} " + t("admin_only"), delete_after=config.notification_timeout)
 
         elif command == "seek" and args:
             if radio.current_song:
@@ -316,7 +342,7 @@ async def handle_prefix_commands(message: discord.Message, radio):
                 except:
                     await message.channel.send(f"{message.author.mention} " + t("format_error"), delete_after=config.notification_timeout)
             else:
-                await message.channel.send(f"{message.author.mention} " + t("no_current_track"), delete_after=5)
+                await message.channel.send(f"{message.author.mention} " + t("no_current_track"), delete_after=config.notification_timeout)
 
     except Exception as e:
         log.error(f"Error in prefix command {command}: {e}")

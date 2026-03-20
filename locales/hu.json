@@ -10,6 +10,7 @@
     "paused": "SZÜNETEL",
     "idle": "ÜRESJÁRAT",
     "stopped": "LEÁLLÍTVA",
+    "buffering": "BETÖLTÉS...",
     "presence_listening": "Hallgatja:",
     "presence_paused": "Megállítva",
     "artist": "Előadó",
@@ -141,5 +142,7 @@
     "loop_queue_toggle": "Várólista végtelenítés állapota megváltozott.",
     "mode_label": "Mód",
     "loop_track_label": "Szám ismétlése",
-    "loop_queue_label": "Várólista ismétlése"
+    "loop_queue_label": "Várólista ismétlése",
+    "restarting": "Bot újraindítása...",
+    "help_restart_desc": "A bot példányának újraindítása (csak adminisztrátoroknak)."
 }

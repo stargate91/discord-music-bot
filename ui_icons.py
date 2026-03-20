@@ -40,6 +40,7 @@ class Icons:
         cls.SYNC = get("SYNC", "<a:musicplay:1478239850355228754>")
         cls.VOLUME = get("VOLUME", "<:volume2:1478347170959589468>")
         cls.WARNING = get("WARNING", "<:trianglealert:1478266385212641421>")
+        cls.BUFFERING = get("BUFFERING", "<a:trailloading:1478249295680503939>")
         
         # PB Icons
         cls.PB_START = get("PB_START", "<:pbleftfullstart:1479349705011105915>")
@@ -82,6 +83,7 @@ Icons.SWEEP = discord.PartialEmoji.from_str("<:brushcleaning:1478347327361253426
 Icons.SYNC = discord.PartialEmoji.from_str("<a:musicplay:1478239850355228754>")
 Icons.VOLUME = discord.PartialEmoji.from_str("<:volume2:1478347170959589468>")
 Icons.WARNING = discord.PartialEmoji.from_str("<:trianglealert:1478266385212641421>")
+Icons.BUFFERING = discord.PartialEmoji.from_str("<a:trailloading:1478249295680503939>")
 Icons.PB_START = discord.PartialEmoji.from_str("<:pbleftfullstart:1479349705011105915>")
 Icons.PB_LEFT = discord.PartialEmoji.from_str("<:pbleftfull:1479349704016920656>")
 Icons.PB_FULL = discord.PartialEmoji.from_str("<:pbfull:1479349702880137437>")

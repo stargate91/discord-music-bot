@@ -50,13 +50,15 @@ class Song:
         # 1. Direct field mapping
         for key, value in data.items():
             if hasattr(self, key) and value is not None:
-                # Always overwrite if current is placeholder or None
+                # Always overwrite if current is placeholder, None or we are resolving
                 current = getattr(self, key)
-                if current in [None, 0, "...", "Unknown"]:
+                is_placeholder = False
+                if isinstance(current, str):
+                    # Robust check for placeholders like [Processing...]
+                    is_placeholder = current in ["...", "Unknown", ""] or (current.startswith("[") and "]" in current)
+                
+                if current in [None, 0] or is_placeholder or self.is_resolving or key == "stream_url":
                     setattr(self, key, value)
-                elif key in ["stream_url", "is_resolving"]: 
-                     # Always overwrite internal state
-                     setattr(self, key, value)
 
         # 2. Logic-based mapping for uploader
         new_uploader = data.get("uploader") or data.get("artist") or data.get("channel")

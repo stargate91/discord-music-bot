@@ -45,3 +45,4 @@ Thumbs.db
 configs/1.env
 configs/2.env
 configs/3.env
+data/cache/

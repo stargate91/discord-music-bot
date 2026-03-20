@@ -12,6 +12,7 @@ class Theme:
     PAUSED = 0xFEE75C
     STOPPED = 0xED4245
     IDLE = 0x2b2d31
+    BUFFERING = 0xEB459E
 
     @classmethod
     def init_theme(cls, config):
@@ -27,3 +28,4 @@ class Theme:
         cls.PAUSED = int(theme_data.get("paused", "0xFEE75C"), 16)
         cls.STOPPED = int(theme_data.get("stopped", "0xED4245"), 16)
         cls.IDLE = int(theme_data.get("idle", "0x2b2d31"), 16)
+        cls.BUFFERING = int(theme_data.get("buffering", "0xEB459E"), 16)

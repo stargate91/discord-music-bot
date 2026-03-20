@@ -25,9 +25,15 @@ class Database:
                     uploader TEXT,
                     duration INTEGER,
                     thumbnail_url TEXT,
+                    local_path TEXT,
                     last_updated TIMESTAMP
                 )
             """)
+            
+            # Migration for local_path if it doesn't exist
+            try:
+                cursor.execute("ALTER TABLE song_cache ADD COLUMN local_path TEXT")
+            except: pass
             
             # 2. Playback History (with user stats)
             cursor.execute("""
@@ -106,18 +112,18 @@ class Database:
                     return data
         except Exception as e:
             from logger import log
-            log.debug(f"Cache get error: {e}")
+            log.debug(f"Cache get error: {url}: {e}")
         return None
 
-    def set_cache(self, url: str, title: str, uploader: str, duration: int, thumbnail_url: str):
+    def set_cache(self, url: str, title: str, uploader: str, duration: int, thumbnail_url: str, local_path: Optional[str] = None):
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 cursor.execute("""
                     INSERT OR REPLACE INTO song_cache 
-                    (url, title, uploader, duration, thumbnail_url, last_updated)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """, (url, title, uploader, duration, thumbnail_url, datetime.now()))
+                    (url, title, uploader, duration, thumbnail_url, local_path, last_updated)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                """, (url, title, uploader, duration, thumbnail_url, local_path, datetime.now()))
                 conn.commit()
         except Exception as e:
             from logger import log
@@ -153,8 +159,24 @@ class Database:
                 conn.commit()
         except: pass
 
+    def get_history_latest(self, offset: int = 0) -> Optional[Song]:
+        """Returns the history entry at the given offset (0 = latest) without deleting."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
+                cursor.execute("SELECT * FROM history ORDER BY id DESC LIMIT 1 OFFSET ?", (offset,))
+                row = cursor.fetchone()
+                if row:
+                    return Song.from_dict(dict(row))
+                return None
+        except Exception as e:
+            from logger import log
+            log.error(f"Error getting history item from DB: {e}")
+            return None
+
     def pop_history_latest(self) -> Optional[Song]:
-        """Fetches and deletes the most recent history entry."""
+        """Fetches and deletes the most recent history entry. (Legacy/Manual use)"""
         try:
             with sqlite3.connect(self.db_path) as conn:
                 conn.row_factory = sqlite3.Row

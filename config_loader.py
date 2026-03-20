@@ -86,6 +86,12 @@ class Config:
     @property
     def user_agent(self): 
         return self.defaults.get("user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+    @property
+    def audio_bitrate(self): return self.defaults.get("audio_bitrate", "128k")
+    @property
+    def max_cache_size_mb(self): return self.defaults.get("max_cache_size_mb", 10240)
+    @property
+    def cache_expiry_days(self): return self.defaults.get("cache_expiry_days", 30)
 
 def load_config(config_file: str = "config.json", instance_name: str = ""):
     config_dir = os.path.join(os.path.dirname(__file__), "configs")

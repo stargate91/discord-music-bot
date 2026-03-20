@@ -29,8 +29,12 @@ class HistoryManager:
         """Removes all items from history."""
         self.db.clear_history()
 
+    def get_latest(self, offset: int = 0) -> Optional[Song]:
+        """Returns the history entry at the given offset (0 = latest) without deleting."""
+        return self.db.get_history_latest(offset=offset)
+
     def pop_latest(self) -> Optional[Song]:
-        """Fetches and deletes the most recent history entry."""
+        """Fetches and deletes the most recent history entry. (Legacy/Manual use)"""
         return self.db.pop_history_latest()
 
     @property

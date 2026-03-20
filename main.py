@@ -193,6 +193,11 @@ async def main():
             await bot.close()
         log.info("Shutdown complete.")
 
+        if os.getenv("BOT_RESTART") == "1":
+            log.info("Process restart initiated via execv...")
+            os.environ["BOT_RESTART"] = "0"
+            os.execv(sys.executable, [sys.executable] + sys.argv)
+
 if __name__ == "__main__":
     try:
         asyncio.run(main())

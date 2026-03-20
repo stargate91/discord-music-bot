@@ -5,6 +5,7 @@ class RadioState(Enum):
     PLAYING = auto()
     PAUSED = auto()
     STOPPED = auto()
+    BUFFERING = auto()
 
 class RadioAction(Enum):
     JOIN = auto()
@@ -33,3 +34,6 @@ class RadioAction(Enum):
     LOOP = auto()
     LOOP_QUEUE = auto()
     SHUFFLE = auto()
+    RESTART = auto()
+    CLEAR_CACHE = auto()
+

@@ -565,6 +565,13 @@ class RemoveFromQueueButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
         self.radio.dispatch(RadioAction.REMOVE_FROM_QUEUE, self.song, user=interaction.user)
+        
+        # Immediate local update for better UX
+        if self.song in self.radio.queue:
+            self.radio.queue.remove(self.song)
+            
+        if hasattr(self.view, 'refresh_view'):
+            await self.view.refresh_view(interaction)
 
 class ClearQueueButton(discord.ui.Button):
     def __init__(self, radio):
@@ -575,6 +582,12 @@ class ClearQueueButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
         self.radio.dispatch(RadioAction.CLEAR_QUEUE, user=interaction.user)
+        
+        # Immediate local update
+        self.radio.queue = []
+        if hasattr(self.view, 'refresh_view'):
+            self.view.current_page = 0
+            await self.view.refresh_view(interaction)
 
 class MoveUpButton(discord.ui.Button):
     def __init__(self, radio, song, is_first=False):
@@ -586,6 +599,11 @@ class MoveUpButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
         self.radio.dispatch(RadioAction.MOVE_SONG, (self.song, -1), user=interaction.user)
+        
+        # Small delay to allow engine to process the swap before we refresh the view
+        await asyncio.sleep(0.1)
+        if hasattr(self.view, 'refresh_view'):
+            await self.view.refresh_view(interaction)
 
 class MoveDownButton(discord.ui.Button):
     def __init__(self, radio, song, is_last=False):
@@ -597,6 +615,11 @@ class MoveDownButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
         self.radio.dispatch(RadioAction.MOVE_SONG, (self.song, 1), user=interaction.user)
+        
+        # Small delay to allow engine to process the swap before we refresh the view
+        await asyncio.sleep(0.1)
+        if hasattr(self.view, 'refresh_view'):
+            await self.view.refresh_view(interaction)
 
 class FullQueueView(PaginatedView):
     def __init__(self, radio, page=0, user: Optional[discord.Member | discord.User] = None):

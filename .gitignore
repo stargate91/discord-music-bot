@@ -1,48 +1,11 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Dynamic bot files
-*.log
-config.local.json
-configs/config.local.json
-embed_state.json
-favorites.json
-history.json
-!.vscode/*.json
-
-# Environment
-.env*
-configs/.env*
-.venv
-venv/
-ENV/
-
-# OS
 .DS_Store
 Thumbs.db
-"*.env" 
-"configs/*.env" 
+__pycache__/
+data/
+configs/.env
 configs/1.env
 configs/2.env
 configs/3.env
-data/cache/
+configs/config1.json
+configs/config2.json
+configs/config3.json

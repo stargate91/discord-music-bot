@@ -92,7 +92,10 @@ async def main():
 
     @bot.event
     async def on_ready():
-        log.info(f"Online as: {bot.user}")
+        log.info(f"--- RADIO BOT ONLINE ---")
+        log.info(f"Identity: {bot.user} (ID: {bot.user.id})")
+        log.info(f"Instance: {args.instance if args.instance else 'Default'}")
+        log.info(f"------------------------")
         try:
             # Re-register views for persistence
             bot.add_view(WelcomeLayout(radio))
@@ -107,6 +110,10 @@ async def main():
             guild_id = config.guild_id
             if guild_id and guild_id > 0:
                 target_guild = discord.Object(id=guild_id)
+                
+                # Clear global commands from this bot identity to prevent crossover
+                tree.clear_commands(guild=None)
+                
                 tree.copy_global_to(guild=target_guild)
                 if args.instance:
                     # Jitter sync to avoid rate limits with multiple instances

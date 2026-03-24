@@ -70,6 +70,10 @@ async def main():
         cleanup_ui_callback=ui_manager.force_new_embed
     )
     
+    # Clear global commands from this bot identity to prevent crossover
+    # DO THIS BEFORE setup_commands adds new ones
+    tree.clear_commands(guild=None)
+    
     setup_commands(tree, radio)
 
     async def embed_refresh_loop():
@@ -110,10 +114,6 @@ async def main():
             guild_id = config.guild_id
             if guild_id and guild_id > 0:
                 target_guild = discord.Object(id=guild_id)
-                
-                # Clear global commands from this bot identity to prevent crossover
-                tree.clear_commands(guild=None)
-                
                 tree.copy_global_to(guild=target_guild)
                 if args.instance:
                     # Jitter sync to avoid rate limits with multiple instances

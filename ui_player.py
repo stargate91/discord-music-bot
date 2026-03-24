@@ -447,7 +447,7 @@ class FrequencyStationView(BaseView):
         super().__init__(radio)
         
         main = Container(accent_color=Theme.BACKGROUND)
-        main.add_item(TextDisplay(f"**{t('system_sync')}**\n{t('synchro_subtitle')}"))
+        main.add_item(TextDisplay(f"**{t('system_settings')}**\n{t('synchro_settings_subtitle')}"))
         
         guild = _bot_ref.get_guild(_config_ref.guild_id)
         if guild:
@@ -504,6 +504,9 @@ class NowPlayingView(BaseView):
             status_text = t("buffering")
         elif radio.status == RadioStatusEnum.IDLE:
             status_text = t("idle")
+            # If idle and no song, use the generic idle status
+            if not song or not song.path:
+                status_text = t("idle_status")
 
         master = Container(accent_color=accent_color)
         

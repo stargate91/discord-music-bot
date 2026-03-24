@@ -20,12 +20,12 @@ class UIManager:
         init_translate(radio)
         init_player_ui(bot, config, self.update_now_playing)
 
-    async def update_now_playing(self, song: Song | None, force_channel_id: int | None = None):
+    async def update_now_playing(self, song: Song | None, force_channel_id: int | None = None, force_cleanup: bool = False):
         """Public entry point for UI updates with locking."""
         async with self._ui_lock:
-            await self._update_ui_internal(song, force_channel_id=force_channel_id)
+            await self._update_ui_internal(song, force_channel_id=force_channel_id, force_cleanup=force_cleanup)
 
-    async def _update_ui_internal(self, song: Song | None, force_channel_id: int | None = None):
+    async def _update_ui_internal(self, song: Song | None, force_channel_id: int | None = None, force_cleanup: bool = False):
         """Internal UI rendering logic."""
         try:
             # Handle potential dict fallback from older code
@@ -58,7 +58,7 @@ class UIManager:
             # 4. Aggressive Cleanup (now after rendering to ensure new IDs are saved)
             # Add a small delay to ensure Discord's cache is updated before we sweep history
             await asyncio.sleep(0.5) 
-            await self._cleanup_stray_messages(channel, force=not show_player)
+            await self._cleanup_stray_messages(channel, force=force_cleanup or not show_player)
 
         except Exception as e:
             log.error(f"UIManager update failed: {e}")
@@ -225,7 +225,7 @@ class UIManager:
             
             # 3. Trigger a full UI update (which will send new messages and then cleanup old ones)
             # We call the internal method directly to stay within the lock
-            await self._update_ui_internal(self.radio.current_song)
+            await self._update_ui_internal(self.radio.current_song, force_cleanup=True)
 
     async def refresh_all_uis(self):
         """Triggers a lock-safe update of the current UI state."""

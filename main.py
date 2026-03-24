@@ -189,6 +189,10 @@ async def main():
                         await ui_manager.clear_voice_status(prev_channel_id)
 
     @bot.event
+    async def on_interaction(interaction: discord.Interaction):
+        await tree.process_commands(interaction)
+
+    @bot.event
     async def on_message(message: discord.Message):
         from commands import handle_prefix_commands
         await handle_prefix_commands(message, radio)

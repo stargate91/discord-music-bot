@@ -32,10 +32,13 @@ os.makedirs("data", exist_ok=True)
 instance_name = os.getenv("INSTANCE_NAME", "")
 log_filename = f"data/{instance_name}_radio.log" if instance_name else "data/radio.log"
 
-# File Handler
-file_handler = logging.FileHandler(log_filename, encoding="utf-8")
-file_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
-log.addHandler(file_handler)
+# File Handler - Only add if NOT being managed by an external process that redirects logs
+if not os.getenv("MANAGED_LOGGING"):
+    file_handler = logging.FileHandler(log_filename, encoding="utf-8")
+    file_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
+    log.addHandler(file_handler)
+else:
+    log.debug(f"[LOGGER] Managed logging active. Skipping FileHandler for {log_filename}")
 
 # Console Handler
 console_handler = logging.StreamHandler(sys.stdout)

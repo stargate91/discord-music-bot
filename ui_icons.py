@@ -1,6 +1,48 @@
 import discord
 
 class Icons:
+    ADD: discord.PartialEmoji = None
+    BACK: discord.PartialEmoji = None
+    GEAR: discord.PartialEmoji = None
+    CLOSE: discord.PartialEmoji = None
+    DISCONNECT: discord.PartialEmoji = None
+    FOLDER_HEART: discord.PartialEmoji = None
+    GLOBE: discord.PartialEmoji = None
+    HEADPHONES: discord.PartialEmoji = None
+    HEART_MINUS: discord.PartialEmoji = None
+    HEART_PLUS: discord.PartialEmoji = None
+    HELP: discord.PartialEmoji = None
+    HISTORY: discord.PartialEmoji = None
+    IDLE: discord.PartialEmoji = None
+    MOVE_DOWN: discord.PartialEmoji = None
+    MOVE_UP: discord.PartialEmoji = None
+    NEXT: discord.PartialEmoji = None
+    PAUSE: discord.PartialEmoji = None
+    PLAY: discord.PartialEmoji = None
+    PREV: discord.PartialEmoji = None
+    QUEUE: discord.PartialEmoji = None
+    RADIO: discord.PartialEmoji = None
+    REMOVE: discord.PartialEmoji = None
+    SEARCH: discord.PartialEmoji = None
+    SEEK: discord.PartialEmoji = None
+    SKIP: discord.PartialEmoji = None
+    STANDBY: discord.PartialEmoji = None
+    STATUS: discord.PartialEmoji = None
+    STOP: discord.PartialEmoji = None
+    SWEEP: discord.PartialEmoji = None
+    SYNC: discord.PartialEmoji = None
+    VOLUME: discord.PartialEmoji = None
+    WARNING: discord.PartialEmoji = None
+    BUFFERING: discord.PartialEmoji = None
+    
+    PB_START: discord.PartialEmoji = None
+    PB_LEFT: discord.PartialEmoji = None
+    PB_FULL: discord.PartialEmoji = None
+    PB_KNOB: discord.PartialEmoji = None
+    PB_EMPTY: discord.PartialEmoji = None
+    PB_RIGHT: discord.PartialEmoji = None
+    PB_END: discord.PartialEmoji = None
+
     @classmethod
     def setup(cls, config):
         """Initializes all icons from config or defaults."""
@@ -9,6 +51,7 @@ class Icons:
         def get(name, default):
             return discord.PartialEmoji.from_str(icons_data.get(name, default))
 
+        cls.GEAR = get("GEAR", "⚙️")
         cls.ADD = get("ADD", "<:plus:1478259626213638194>")
         cls.BACK = get("BACK", "<:skipback:1478346950423351409>")
         cls.CLOSE = get("CLOSE", "<:x_:1478346611057889341>")
@@ -51,43 +94,6 @@ class Icons:
         cls.PB_RIGHT = get("PB_RIGHT", "<:pbrightempty:1479349706227191828>")
         cls.PB_END = get("PB_END", "<:pbrightemptyend:1479349707418636451>")
 
-# Default initialization so it doesn't break if setup isn't called immediately (not ideal but safe)
-Icons.ADD = discord.PartialEmoji.from_str("<:plus:1478259626213638194>")
-Icons.BACK = discord.PartialEmoji.from_str("<:skipback:1478346950423351409>")
-Icons.CLOSE = discord.PartialEmoji.from_str("<:x_:1478346611057889341>")
-Icons.DISCONNECT = discord.PartialEmoji.from_str("<:unplug:1478251603848069251>")
-Icons.FOLDER_HEART = discord.PartialEmoji.from_str("<:folderheart:1478959293867757618>")
-Icons.GLOBE = discord.PartialEmoji.from_str("<:globe:1479722340320542820>")
-Icons.HEADPHONES = discord.PartialEmoji.from_str("<:headphones:1478347620526325842>")
-Icons.HEART_MINUS = discord.PartialEmoji.from_str("<:heartminus:1478958133526270143>")
-Icons.HEART_PLUS = discord.PartialEmoji.from_str("<:heartplus:1478958134981820496>")
-Icons.HELP = discord.PartialEmoji.from_str("<:badgequestionmark:1483516990118166632>")
-Icons.HISTORY = discord.PartialEmoji.from_str("<:scrolltext:1478347243428905061>")
-Icons.IDLE = discord.PartialEmoji.from_str("<:moon:1482978543196573746>")
-Icons.MOVE_DOWN = discord.PartialEmoji.from_str("<:chevrondown:1478330165896675389>")
-Icons.MOVE_UP = discord.PartialEmoji.from_str("<:chevronup:1478330154437836883>")
-Icons.NEXT = discord.PartialEmoji.from_str("<:chevronright:1478332976587604019>")
-Icons.PAUSE = discord.PartialEmoji.from_str("<:pause:1478346796118970428>")
-Icons.PLAY = discord.PartialEmoji.from_str("<:play:1478346681824317490>")
-Icons.PREV = discord.PartialEmoji.from_str("<:chevronleft:1478332975077785631>")
-Icons.QUEUE = discord.PartialEmoji.from_str("<:rows3:1478347365923688543>")
-Icons.RADIO = discord.PartialEmoji.from_str("<:audiolines:1478347583934955540>")
-Icons.REMOVE = discord.PartialEmoji.from_str("<:trash2:1478347449004458095>")
-Icons.SEARCH = discord.PartialEmoji.from_str("<:search:1478333583797256292>")
-Icons.SEEK = discord.PartialEmoji.from_str("<:fastforward:1478347054182043678>")
-Icons.SKIP = discord.PartialEmoji.from_str("<:skipforward:1478346952222572597>")
-Icons.STANDBY = discord.PartialEmoji.from_str("<a:trailloading:1478249295680503939>")
-Icons.STATUS = discord.PartialEmoji.from_str("<:folderopen:1478347534312276041>")
-Icons.STOP = discord.PartialEmoji.from_str("<:square:1478346870945484913>")
-Icons.SWEEP = discord.PartialEmoji.from_str("<:brushcleaning:1478347327361253426>")
-Icons.SYNC = discord.PartialEmoji.from_str("<a:musicplay:1478239850355228754>")
-Icons.VOLUME = discord.PartialEmoji.from_str("<:volume2:1478347170959589468>")
-Icons.WARNING = discord.PartialEmoji.from_str("<:trianglealert:1478266385212641421>")
-Icons.BUFFERING = discord.PartialEmoji.from_str("<a:trailloading:1478249295680503939>")
-Icons.PB_START = discord.PartialEmoji.from_str("<:pbleftfullstart:1479349705011105915>")
-Icons.PB_LEFT = discord.PartialEmoji.from_str("<:pbleftfull:1479349704016920656>")
-Icons.PB_FULL = discord.PartialEmoji.from_str("<:pbfull:1479349702880137437>")
-Icons.PB_KNOB = discord.PartialEmoji.from_str("<:pbdivider:1479349699835072573>")
-Icons.PB_EMPTY = discord.PartialEmoji.from_str("<:pbempty:1479349701450137660>")
-Icons.PB_RIGHT = discord.PartialEmoji.from_str("<:pbrightempty:1479349706227191828>")
-Icons.PB_END = discord.PartialEmoji.from_str("<:pbrightemptyend:1479349707418636451>")
+# Default initialization
+class DefaultConfig: emojis = {}
+Icons.setup(DefaultConfig())

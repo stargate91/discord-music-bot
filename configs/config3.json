@@ -71,6 +71,7 @@
         "ephemeral_cache": true
     },
     "emojis": {
+        "GEAR": "<:settings:1486100715666538527>",
         "RADIO": "<:audiolines:1483938716488695889>",
         "HELP": "<:badgequestionmark:1483938717658906708>",
         "SWEEP": "<:brushcleaning:1483938719152078918>",

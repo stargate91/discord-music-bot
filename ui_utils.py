@@ -62,7 +62,7 @@ def get_feedback(key: str, **kwargs) -> str:
         
         # --- Success / Confirmation ---
         "weblink_added": Icons.QUEUE,            # Link hozzáadva a várólistához!
-        "vol_set": Icons.VOLUME_UP,              # Hangerő beállítva: [százalék]
+        "vol_set": Icons.VOLUME,                 # Hangerő beállítva: [százalék]
         "added_to_fav": Icons.HEART_PLUS,        # Hozzáadva a kedvencekhez!
         "removed_from_fav": Icons.HEART_MINUS,   # Eltávolítva a kedvencekből!
         "added_all_to_queue": Icons.QUEUE,       # Az összes dalt hozzáadtam a várólistához!

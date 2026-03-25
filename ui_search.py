@@ -5,7 +5,7 @@ from discord.ui import Modal, TextInput, ActionRow, Container, Section, TextDisp
 from ui_translate import t
 from ui_icons import Icons
 from ui_base import handle_ui_error, PaginatedView
-from ui_utils import safe_delete_message, safe_fetch_message, format_duration, respond
+from ui_utils import safe_delete_message, safe_fetch_message, format_duration, respond, get_feedback
 from radio_actions import RadioAction, RadioState
 from logger import log
 from ui_theme import Theme
@@ -46,7 +46,7 @@ class WebLinkModal(Modal):
         if not url: return
         
         self.radio.dispatch(RadioAction.ADD_EXT_LINK, url, user=interaction.user)
-        await respond(interaction, t("weblink_added"), delete_after=self.radio.config.notification_timeout)
+        await respond(interaction, get_feedback("weblink_added"), delete_after=self.radio.config.notification_timeout)
 
 class SearchButton(discord.ui.Button):
     def __init__(self, radio):
@@ -82,7 +82,7 @@ class SearchModal(Modal):
         query = self.query_input.value.strip()
         
         # Searching...
-        msg = await interaction.followup.send(t("search_processing"), ephemeral=True)
+        msg = await interaction.followup.send(get_feedback("search_processing"), ephemeral=True)
         log.info(f"[SEARCH] User {interaction.user.name} searched for: {query}")
         
         results = []
@@ -95,7 +95,7 @@ class SearchModal(Modal):
         
         if not results:
             log.info(f"[SEARCH] No results found for: {query}")
-            await interaction.followup.send(t("empty"), ephemeral=True)
+            await interaction.followup.send(get_feedback("empty"), ephemeral=True)
             return
 
         log.info(f"[SEARCH] Found {len(results)} results for: {query}")
@@ -124,7 +124,7 @@ class SearchResultAddButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
         self.radio.dispatch(RadioAction.ADD_EXT_LINK, self.result.path, user=interaction.user)
-        await respond(interaction, t("weblink_added"), delete_after=self.radio.config.notification_timeout)
+        await respond(interaction, get_feedback("weblink_added"), delete_after=self.radio.config.notification_timeout)
 
 class FavoriteListButton(discord.ui.Button):
     def __init__(self, radio, song: Song, user_id: Optional[int] = None):
@@ -159,10 +159,9 @@ class FavoriteListButton(discord.ui.Button):
             log.debug(f"[UI] Favorite refresh failed (non-critical): {e}")
 
         # Correct feedback based on state before dispatch
-        icon = Icons.HEART_PLUS if will_be_added else Icons.HEART_MINUS
-        msg = t("added_to_fav") if will_be_added else t("removed_from_fav")
+        key = "added_to_fav" if will_be_added else "removed_from_fav"
         
-        await respond(interaction, f"{icon} {msg}", delete_after=self.radio.config.notification_timeout)
+        await respond(interaction, get_feedback(key), delete_after=self.radio.config.notification_timeout)
 
 class SearchResultsView(PaginatedView):
     def __init__(self, radio, results, query=None, user=None, page=0):
@@ -176,7 +175,7 @@ class SearchResultsView(PaginatedView):
         container = Container(accent_color=Theme.PRIMARY)
         
         # Build header with query and user
-        header_text = f"### {Icons.SEARCH} {t('search_results_title')}"
+        header_text = f"### {get_feedback('search_results_title')}"
         if query:
             header_text += f" - *\"{query}\"*"
         if user:
@@ -280,7 +279,7 @@ class FavoriteRemoveButton(discord.ui.Button):
             await self.view.refresh_view(interaction)
             
         # Optional: send a followup confirmation
-        await respond(interaction, f"{Icons.REMOVE} {t('removed_from_fav')}", delete_after=self.radio.config.notification_timeout)
+        await respond(interaction, get_feedback('removed_from_fav'), delete_after=self.radio.config.notification_timeout)
 
 class FavoritesView(PaginatedView):
     def __init__(self, radio, user_id, page=0):
@@ -289,7 +288,7 @@ class FavoritesView(PaginatedView):
         self.user_id = user_id
         
         container = Container(accent_color=Theme.PRIMARY)
-        container.add_item(TextDisplay(f"### {Icons.FOLDER_HEART} {t('library_label')}"))
+        container.add_item(TextDisplay(f"### {get_feedback('library_label')}"))
         container.add_item(Separator())
         
         if not favs:
@@ -369,7 +368,7 @@ class AddAllFavoritesButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         # Check permissions
         if not self.radio.can_interact(interaction.user):
-            await interaction.response.send_message(t("not_in_same_voice"), ephemeral=True)
+            await interaction.response.send_message(get_feedback("not_in_same_voice"), ephemeral=True)
             return
 
         await interaction.response.defer(ephemeral=True)
@@ -386,14 +385,14 @@ class AddAllFavoritesButton(discord.ui.Button):
         # Ensure bot is in voice if we want it to start playing immediately
         if self.radio.voice_channel_id is None:
             if not interaction.user.voice:
-                await interaction.followup.send(t("no_permission"), ephemeral=True)
+                await interaction.followup.send(get_feedback("no_permission"), ephemeral=True)
                 return
             self.radio.dispatch(RadioAction.JOIN, interaction.user.voice.channel.id, user=interaction.user)
 
         # Dispatch as action to wake up the engine if idle
         self.radio.dispatch(RadioAction.ADD_SONGS, q_songs, user=interaction.user)
             
-        await respond(interaction, f"{Icons.QUEUE} {t('added_all_to_queue')}", delete_after=self.radio.config.notification_timeout)
+        await respond(interaction, get_feedback('added_all_to_queue'), delete_after=self.radio.config.notification_timeout)
 
 class ClearFavoritesButton(discord.ui.Button):
     def __init__(self, radio, user_id):
@@ -415,7 +414,7 @@ class ClearFavoritesButton(discord.ui.Button):
             self.view.data_list = []
             await self.view.refresh_view(interaction)
             
-        await respond(interaction, f"{Icons.SWEEP} {t('cleared_favorites')}", delete_after=self.radio.config.notification_timeout)
+        await respond(interaction, get_feedback('cleared_favorites'), delete_after=self.radio.config.notification_timeout)
 
 class HistoryButton(discord.ui.Button):
     def __init__(self, radio, custom_id="history_button"):
@@ -441,7 +440,7 @@ class HistoryView(PaginatedView):
         self.user = user
         
         container = Container(accent_color=Theme.PRIMARY)
-        container.add_item(TextDisplay(f"### {Icons.HISTORY} {t('history_label')}"))
+        container.add_item(TextDisplay(f"### {get_feedback('history_label')}"))
         container.add_item(Separator())
         
         if not history:
@@ -522,7 +521,7 @@ class ClearHistoryButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         # Additional check in callback for safety
         if not self.radio.is_admin(interaction.user):
-            await interaction.response.send_message(t("admin_only"), ephemeral=True)
+            await interaction.response.send_message(get_feedback("admin_only"), ephemeral=True)
             return
 
         self.radio.dispatch(RadioAction.CLEAR_HISTORY, user=interaction.user)
@@ -535,7 +534,7 @@ class ClearHistoryButton(discord.ui.Button):
             self.view.data_list = []
             await self.view.refresh_view(interaction)
         
-        await respond(interaction, f"{Icons.SWEEP} History cleared!", delete_after=self.radio.config.notification_timeout)
+        await respond(interaction, get_feedback("cleared_history"), delete_after=self.radio.config.notification_timeout)
 
 class QueueViewButton(discord.ui.Button):
     def __init__(self, radio):
@@ -629,7 +628,7 @@ class FullQueueView(PaginatedView):
         super().__init__(radio, queue, items_per_page=radio.config.queue_items_per_page, page=page)
         self.user = user
         container = Container(accent_color=Theme.PRIMARY)
-        container.add_item(TextDisplay(f"### {Icons.QUEUE} {t('queue_label')}"))
+        container.add_item(TextDisplay(f"### {get_feedback('queue_label')}"))
         container.add_item(Separator())
         
         if not self.data_list:

@@ -4,7 +4,7 @@ from discord.ui import Modal, TextInput, LayoutView, ActionRow, Container, Secti
 from ui_translate import t
 from ui_icons import Icons
 from ui_base import handle_ui_error, BaseView
-from ui_utils import format_duration, respond
+from ui_utils import format_duration, respond, get_feedback
 from radio_actions import RadioAction, RadioState as RadioStatusEnum
 from core.models import Song
 from ui_theme import Theme
@@ -179,7 +179,7 @@ class SeekButton(discord.ui.Button):
     @handle_ui_error
     async def callback(self, interaction: discord.Interaction):
         if self.radio.status in [RadioStatusEnum.IDLE, RadioStatusEnum.STOPPED]:
-            await respond(interaction, t("cannot_seek_stopped"), delete_after=self.radio.config.notification_timeout)
+            await respond(interaction, get_feedback("cannot_seek_stopped"), delete_after=self.radio.config.notification_timeout)
             return
         modal = SeekModal(self.radio)
         await interaction.response.send_modal(modal)
@@ -208,11 +208,11 @@ class SeekModal(Modal):
             else:
                 total_seconds = int(ts)
         except:
-            await respond(interaction, t("format_error"), delete_after=self.radio.config.notification_timeout)
+            await respond(interaction, get_feedback("format_error"), delete_after=self.radio.config.notification_timeout)
             return
         
         if not self.radio.current_song:
-            await respond(interaction, t("no_current_track"), delete_after=self.radio.config.notification_timeout)
+            await respond(interaction, get_feedback("no_current_track"), delete_after=self.radio.config.notification_timeout)
             return
             
         self.radio.dispatch(RadioAction.SEEK, total_seconds, user=interaction.user)
@@ -256,9 +256,9 @@ class VolumeModal(Modal):
                 if not interaction.response.is_done():
                     await interaction.response.defer()
             else:
-                await respond(interaction, t("vol_range_error"), delete_after=self.radio.config.notification_timeout)
+                await respond(interaction, get_feedback("vol_range_error"), delete_after=self.radio.config.notification_timeout)
         except:
-            await respond(interaction, t("invalid_number"), delete_after=self.radio.config.notification_timeout)
+            await respond(interaction, get_feedback("invalid_number"), delete_after=self.radio.config.notification_timeout)
 
 
 class FavoriteToggleButton(discord.ui.Button):
@@ -296,10 +296,8 @@ class FavoriteToggleButton(discord.ui.Button):
         if not self.radio.is_compact:
             self.label = t('fav_remove_label') if added else t('fav_add_label')
         
-        icon = Icons.HEART_PLUS if added else Icons.HEART_MINUS
-        msg = t("added_to_fav") if added else t("removed_from_fav")
-        
-        await respond(interaction, f"{icon} {msg}", delete_after=self.radio.config.notification_timeout)
+        key = "added_to_fav" if added else "removed_from_fav"
+        await respond(interaction, get_feedback(key), delete_after=self.radio.config.notification_timeout)
         
         # Refresh the main message UI to reflect changed HEART state immediately if possible
         try:
@@ -357,7 +355,7 @@ class HelpView:
     def get_embed(self) -> discord.Embed:
         prefix = self.config.command_prefix
         embed = discord.Embed(
-            title=f"{Icons.HELP} {t('help_title')}",
+            title=get_feedback('help_title'),
             description=t("help_description"),
             color=Theme.PRIMARY
         )

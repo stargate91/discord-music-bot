@@ -124,6 +124,7 @@
     "clear_favorites": "Gyűjtemény törlése",
     "added_all_to_queue": "Az összes dalt hozzáadtam a várólistához!",
     "cleared_favorites": "A teljes gyűjteményt töröltem!",
+    "cleared_history": "Lejátszási előzmények törölve!",
     "help_play_desc": "Lejátszás linkről, keresés vagy folytatás. (rövid: `p`)",
     "help_pause_desc": "Pillanatnyi megállítás.",
     "help_stop_desc": "Lejátszás leállítása.",

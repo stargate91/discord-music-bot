@@ -3,6 +3,7 @@ import traceback
 from discord.ui import LayoutView
 from ui_icons import Icons
 from ui_translate import t
+from ui_utils import get_feedback
 from logger import log
 
 def handle_ui_error(func):
@@ -22,11 +23,11 @@ def handle_ui_error(func):
             if not radio.can_interact(interaction.user):
                 # We need to import t inside to avoid circular imports or missing refs
                 # but it's already at top level. Let's use it.
-                msg = t('not_in_same_voice') or "Join the bot's voice channel to interact!"
+                feedback = get_feedback('not_in_same_voice')
                 if not interaction.response.is_done():
-                    await interaction.response.send_message(f"{Icons.WARNING} {msg}", ephemeral=True)
+                    await interaction.response.send_message(feedback, ephemeral=True)
                 else:
-                    await interaction.followup.send(f"{Icons.WARNING} {msg}", ephemeral=True)
+                    await interaction.followup.send(feedback, ephemeral=True)
                 
                 # Auto-delete error notification
                 from ui_utils import delayed_delete
@@ -52,12 +53,12 @@ def handle_ui_error(func):
 
 async def _send_error_msg(interaction):
     if not interaction: return
-    error_msg = t('error_generic') or "An error occurred."
+    feedback = get_feedback('error_generic')
     try:
         if not interaction.response.is_done():
-            await interaction.response.send_message(f"{Icons.WARNING} {error_msg}", ephemeral=True)
+            await interaction.response.send_message(feedback, ephemeral=True)
         else:
-            await interaction.followup.send(f"{Icons.WARNING} {error_msg}", ephemeral=True)
+            await interaction.followup.send(feedback, ephemeral=True)
     except:
         pass # Final line of defense
 
@@ -70,12 +71,12 @@ class BaseView(LayoutView):
     async def on_error(self, interaction: discord.Interaction, error: Exception, item: discord.ui.Item) -> None:
         log.error(f"View Error: {error} in {item}")
         traceback.print_exc()
-        error_msg = t('error_generic') or "An error occurred."
+        feedback = get_feedback('error_generic')
         try:
             if not interaction.response.is_done():
-                await interaction.response.send_message(f"{Icons.WARNING} {error_msg}", ephemeral=True)
+                await interaction.response.send_message(feedback, ephemeral=True)
             else:
-                await interaction.followup.send(f"{Icons.WARNING} {error_msg}", ephemeral=True)
+                await interaction.followup.send(feedback, ephemeral=True)
         except discord.errors.NotFound:
             log.warning(f"Could not send view error message (interaction expired): {error}")
         except Exception as e:

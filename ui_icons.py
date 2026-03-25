@@ -34,6 +34,7 @@ class Icons:
     VOLUME: discord.PartialEmoji = None
     WARNING: discord.PartialEmoji = None
     BUFFERING: discord.PartialEmoji = None
+    REPEAT: discord.PartialEmoji = None
     
     PB_START: discord.PartialEmoji = None
     PB_LEFT: discord.PartialEmoji = None
@@ -83,6 +84,7 @@ class Icons:
         cls.SYNC = get("SYNC", "<a:musicplay:1478239850355228754>")
         cls.VOLUME = get("VOLUME", "<:volume2:1478347170959589468>")
         cls.WARNING = get("WARNING", "<:trianglealert:1478266385212641421>")
+        cls.REPEAT = get("REPEAT", "🔁")
         cls.BUFFERING = get("BUFFERING", "<a:trailloading:1478249295680503939>")
         
         # PB Icons

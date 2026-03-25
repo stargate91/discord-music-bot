@@ -31,7 +31,6 @@ def get_feedback(key: str, **kwargs) -> str:
         "cannot_pause_stopped": Icons.WARNING,   # Álló helyzetben nem tudod szüneteltetni.
         "cannot_seek_stopped": Icons.WARNING,    # Álló helyzetben nem tudsz tekerni.
         "vol_range_error": Icons.WARNING,        # 0 és 100 között adj meg valamit.
-        "no_playing_error": Icons.WARNING,       # Nem szól semmi.
         "no_current_track": Icons.WARNING,       # Nincs mihez ugrani.
         "no_next_track": Icons.WARNING,          # Nincs több szám a várólistában.
         "no_prev_track": Icons.WARNING,          # Nincs korábbi szám az előzményekben.
@@ -73,12 +72,12 @@ def get_feedback(key: str, **kwargs) -> str:
         "resuming_feedback": Icons.PLAY,         # Zene folytatása...
         "pausing": Icons.PAUSE,                  # Szünet...
         "stopping": Icons.STOP,                   # Leállítás...
-        "loop_enabled": Icons.SYNC,              # Végtelenített lejátszás bekapcsolva.
+        "loop_enabled": Icons.REPEAT,            # Végtelenített lejátszás bekapcsolva.
         "loop_disabled": Icons.CLOSE,            # Végtelenített lejátszás kikapcsolva.
-        "loop_queue_enabled": Icons.SYNC,        # Várólista végtelenítés bekapcsolva.
+        "loop_queue_enabled": Icons.REPEAT,      # Várólista végtelenítés bekapcsolva.
         "loop_queue_disabled": Icons.CLOSE,      # Várólista végtelenítés kikapcsolva.
-        "loop_toggle": Icons.SYNC,               # Végtelenített lejátszás állapota megváltozott.
-        "loop_queue_toggle": Icons.SYNC,         # Várólista végtelenítés állapota megváltozott.
+        "loop_toggle": Icons.REPEAT,             # Végtelenített lejátszás állapota megváltozott.
+        "loop_queue_toggle": Icons.REPEAT,      # Várólista végtelenítés állapota megváltozott.
         "back_label": Icons.BACK,                # Vissza...
     }
     

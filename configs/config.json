@@ -103,6 +103,7 @@
         "WARNING": "⚠️",
         "DISCONNECT": "🔌",
         "VOLUME": "🔊",
+        "REPEAT": "🔁",
         "CLOSE": "❌",
         "PB_START": "[",
         "PB_LEFT": "█",

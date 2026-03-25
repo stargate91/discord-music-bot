@@ -173,6 +173,11 @@ class RadioPlayer:
                 await self._disconnect(voice)
                 return True
             elif await self._handle_state_agnostic_action(action, data):
+                # If an action was handled (like adding a song), check if we should now be playing
+                if self.radio.queue or self.radio.future_queue:
+                    log.info("[PLAYER] Song(s) added while IDLE. Transitioning to PLAYING.")
+                    self.radio.status = RadioStatusEnum.PLAYING
+                    return False
                 return True
             elif action == RadioAction.REPLAY:
                 # IMPORTANT: If we are STOPPED but have a current_song, we want to play it, not skip to next.
@@ -261,6 +266,12 @@ class RadioPlayer:
                     # Loop back to start of function.
                     self.radio.current_song = self.radio.queue.pop(0)
                 else:
+                    # Final safety: If the voice client is STILL playing somehow, don't go IDLE yet.
+                    if voice and voice.is_playing():
+                        log.warning("[PLAYER] Queue empty but voice still playing. Delaying IDLE state.")
+                        await asyncio.sleep(1.0)
+                        return
+
                     self.radio.status = RadioStatusEnum.IDLE
                     self.radio.current_song = None
                     self.radio.is_navigating = False

@@ -33,7 +33,9 @@ class UIManager:
                 song = None
                 
             has_no_song = song is None or not song.path
-            show_player = not has_no_song or self.radio.voice_channel_id
+            # The player should be shown IF we have a song OR we are in a voice channel
+            # This ensures "Waiting for next song" shows up properly when IDLE but connected.
+            show_player = bool(not has_no_song or self.radio.voice_channel_id)
             
             if not self.bot or self.bot.is_closed(): return
             
@@ -178,6 +180,7 @@ class UIManager:
         self.radio.embed_manager.save_message_id("station", self.radio.station_message.id)
 
     async def _render_player_message(self, channel, song, show_player):
+        if not channel: return
         
         if not show_player:
             # We want to ensure no player message exists

@@ -176,17 +176,25 @@ async def main():
                     await ui_manager.update_now_playing(radio.current_song)
             else:
                 # We got a disconnect event. Only clear state if we ARE actually disconnected.
-                # Sometimes Discord sends transient None channels while switching.
+                # Sometimes Discord sends transient None channels while switching or blips.
                 if not voice_client or not voice_client.is_connected():
-                    prev_channel_id = old_channel.id if old_channel else radio.voice_channel_id
-                    radio.voice_channel_id = None
-                    radio.voice = None
-                    radio.status = RadioStatusEnum.IDLE
-                    radio.current_song = None
-                    await ui_manager.update_now_playing(None)
+                    # Small delay to allow for transient blips / reconnects
+                    await asyncio.sleep(1.5)
+                    voice_client = member.guild.voice_client 
                     
-                    if prev_channel_id:
-                        await ui_manager.clear_voice_status(prev_channel_id)
+                    if not voice_client or not voice_client.is_connected():
+                        log.info(f"[VOICE] Confirmed disconnect for {member.guild.name}. Cleaning up state.")
+                        prev_channel_id = old_channel.id if old_channel else radio.voice_channel_id
+                        radio.voice_channel_id = None
+                        radio.voice = None
+                        radio.status = RadioStatusEnum.IDLE
+                        radio.current_song = None
+                        await ui_manager.update_now_playing(None)
+                        
+                        if prev_channel_id:
+                            await ui_manager.clear_voice_status(prev_channel_id)
+                    else:
+                        log.info(f"[VOICE] Disconnect event was transient. Bot is still connected to {voice_client.channel.name}")
 
     @bot.event
     async def on_interaction(interaction: discord.Interaction):

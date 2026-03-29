@@ -91,7 +91,7 @@ def setup_commands(tree: app_commands.CommandTree, radio):
             await respond(interaction, get_feedback("no_prev_track"), delete_after=radio.config.notification_timeout)
             return
         radio.dispatch(RadioAction.BACK, user=interaction.user)
-        await respond(interaction, get_feedback("back_label") + "...", delete_after=radio.config.notification_timeout)
+        await respond(interaction, get_feedback("backing"), delete_after=radio.config.notification_timeout)
 
     @tree.command(name="join", description=t("help_join_desc"))
     async def join(interaction: discord.Interaction):

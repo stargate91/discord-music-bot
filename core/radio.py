@@ -225,7 +225,8 @@ class RadioManager:
                 )
                 log.info(f"[RESOLVER] Successfully resolved: {song.uploader} - {song.title}")
             else:
-                song.title = f"⚠️ Could not resolve: {song.path}"
+                from ui_translate import t
+                song.title = f"⚠️ {t('error_resolve')} {song.path}"
                 log.warning(f"[RESOLVER] Failed to resolve link: {song.path}")
         except Exception as e:
             log.error(f"[RADIO] Resolution task exception: {e}")

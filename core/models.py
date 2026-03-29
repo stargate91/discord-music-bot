@@ -3,8 +3,8 @@ from typing import Optional, Dict, Any
 
 @dataclass
 class Song:
-    title: str
     path: str  # The playback URL or file path
+    title: Optional[str] = None
     uploader: Optional[str] = None
     duration: int = 0
     thumbnail_url: Optional[str] = None
@@ -26,7 +26,7 @@ class Song:
         uploader = data.get("uploader") or data.get("artist") or data.get("channel")
         
         return cls(
-            title=data.get("title", "Unknown"),
+            title=data.get("title"),
             path=data.get("path") or data.get("url", ""),
             uploader=uploader,
             duration=int(data.get("duration", 0)),
@@ -55,14 +55,14 @@ class Song:
                 is_placeholder = False
                 if isinstance(current, str):
                     # Robust check for placeholders like [Processing...]
-                    is_placeholder = current in ["...", "Unknown", ""] or (current.startswith("[") and "]" in current)
+                    is_placeholder = current in ["...", ""] or (current.startswith("[") and "]" in current)
                 
                 if current in [None, 0] or is_placeholder or self.is_resolving or key == "stream_url":
                     setattr(self, key, value)
 
         # 2. Logic-based mapping for uploader
         new_uploader = data.get("uploader") or data.get("artist") or data.get("channel")
-        if new_uploader and (self.uploader in [None, "...", "Unknown"]):
+        if new_uploader and (self.uploader in [None, "...", ""]):
             self.uploader = new_uploader
         
         # 3. Path/URL mapping

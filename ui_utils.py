@@ -37,10 +37,19 @@ def get_feedback(key: str, **kwargs) -> str:
         "format_error": Icons.WARNING,           # Használd a pp:mp formátumot!
         "too_long": Icons.WARNING,               # Ilyen hosszú nincs is ez a szám.
         "cooldown_error": Icons.WARNING,         # Várj egy kicsit, pihen a rendszer...
-        "weblink_error": Icons.WARNING,          # Érvénytelen vagy nem támogatott link!
         "nothing_playing": Icons.WARNING,        # Most épp semmi nem szól.
         "invalid_number": Icons.WARNING,         # Ez nem egy szám!
         "empty": Icons.WARNING,                  # Üres...
+        "error_resolve": Icons.WARNING,          # Nem sikerült feldolgozni a linket.
+        
+        # --- Status Messages ---
+        "now_playing": Icons.HEADPHONES,         # MOST SZÓL (Headphones for playback)
+        "paused": Icons.PAUSE,                   # SZÜNETEL
+        "stopped": Icons.STOP,                   # LEÁLLÍTVA
+        "buffering": Icons.BUFFERING,           # BETÖLTÉS...
+        "idle": Icons.IDLE,                      # ÜRESJÁRAT
+        "idle_status": Icons.IDLE,               # Várakozás a következő zenére...
+        "resolving_link": "",                    # [Link feldolgozása...]
         
         # --- Headers / Titles ---
         "help_title": Icons.HELP,                 # Bot Segítség & Parancsok
@@ -48,14 +57,25 @@ def get_feedback(key: str, **kwargs) -> str:
         "library_label": Icons.FOLDER_HEART,      # Saját Gyűjtemény
         "history_label": Icons.HISTORY,           # Előzmények
         "queue_label": Icons.QUEUE,               # Várólista
+        "system_sync": Icons.SYNC,               # CSATLAKOZÁS
+        "system_settings": Icons.GEAR,           # BEÁLLÍTÁSOK
+        "standby_mode": Icons.STANDBY,           # KÉSZENLÉT
+        
+        # --- Field Labels (Plain text, no icons) ---
+        "uploader": "",                          # Feltöltő
+        "title": "",                             # Cím
+        "duration": "",                          # Hossz
+        "source": "",                            # Forrás
+        "tuned_by": "",                          # Kérte:
+        "unknown": "",                           # Ismeretlen
         
         # --- Processing / Waiting ---
         "search_processing": Icons.SEARCH,       # Keresés a YouTube-on...
-        "weblink_processing": Icons.GLOBE,       # Link feldolgozása, kis türelmet...
         "syncing": Icons.SYNC,                   # Csatlakozás...
         "severing": Icons.CLOSE,                 # Lecsatlakozás...
         "resuming": Icons.PLAY,                  # Folytatás...
         "forwarding": Icons.NEXT,                # Következő szám...
+        "backing": Icons.BACK,                   # Visszalépés az előzőre...
         "jumping": Icons.SEEK,                   # Ugrás ide: [időpont]
         "restarting": Icons.SYNC,                # Bot újraindítása...
         
@@ -68,7 +88,6 @@ def get_feedback(key: str, **kwargs) -> str:
         "cleared_favorites": Icons.SWEEP,        # A teljes gyűjteményt töröltem!
         "cleared_history": Icons.SWEEP,          # Lejátszási előzmények törölve!
         "queue_shuffled": Icons.SWEEP,           # Várólista megkeverve!
-        "shuffle_feedback": Icons.SWEEP,         # Várólista megkeverve!
         "resuming_feedback": Icons.PLAY,         # Zene folytatása...
         "pausing": Icons.PAUSE,                  # Szünet...
         "stopping": Icons.STOP,                  # Leállítás...
@@ -76,9 +95,6 @@ def get_feedback(key: str, **kwargs) -> str:
         "loop_disabled": Icons.CLOSE,            # Végtelenített lejátszás kikapcsolva.
         "loop_queue_enabled": Icons.REPEAT,      # Várólista végtelenítés bekapcsolva.
         "loop_queue_disabled": Icons.CLOSE,      # Várólista végtelenítés kikapcsolva.
-        "loop_toggle": Icons.REPEAT,             # Végtelenített lejátszás állapota megváltozott.
-        "loop_queue_toggle": Icons.REPEAT,       # Várólista végtelenítés állapota megváltozott.
-        "back_label": Icons.BACK,                # Vissza...
     }
     
     emoji = icons_map.get(key, "")

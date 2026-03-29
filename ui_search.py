@@ -189,7 +189,7 @@ class SearchResultsView(PaginatedView):
 
         items = self.get_page_items()
         for i, res in enumerate(items, self.current_page * self.items_per_page + 1):
-            t_title = truncate(res.title or t('unknown'), radio.config.list_max_title_len)
+            t_title = truncate(res.title or get_feedback('unknown'), radio.config.list_max_title_len)
             
             info = f"**{i}. {t_title}** ({format_duration(res.duration)})"
             container.add_item(TextDisplay(info))
@@ -292,14 +292,14 @@ class FavoritesView(PaginatedView):
         container.add_item(Separator())
         
         if not favs:
-            container.add_item(TextDisplay(f"*{t('empty')}*"))
+            container.add_item(TextDisplay(f"*{get_feedback('empty')}*"))
         else:
             def truncate(text, max_len):
                 return (text[:max_len-3] + '...') if len(text) > max_len else text
 
             items = self.get_page_items()
             for i, song in enumerate(items, self.current_page * self.items_per_page + 1):
-                t_title = truncate(song.title or t('unknown'), radio.config.list_max_title_len)
+                t_title = truncate(song.title or get_feedback('unknown'), radio.config.list_max_title_len)
                 
                 info = f"**{i}. {t_title}** ({format_duration(song.duration)})"
                 container.add_item(TextDisplay(info))
@@ -444,15 +444,15 @@ class HistoryView(PaginatedView):
         container.add_item(Separator())
         
         if not history:
-            container.add_item(TextDisplay(f"*{t('no_prev_track')}*"))
+            container.add_item(TextDisplay(f"*{get_feedback('no_prev_track')}*"))
         else:
             def truncate(text, max_len):
                 return (text[:max_len-3] + '...') if len(text) > max_len else text
 
             items = self.get_page_items()
             for i, song in enumerate(items, self.current_page * self.items_per_page + 1):
-                t_title = truncate(song.title or t('unknown'), radio.config.list_max_title_len)
-                t_user = song.requested_by or t('unknown')
+                t_title = truncate(song.title or get_feedback('unknown'), radio.config.list_max_title_len)
+                t_user = song.requested_by or get_feedback('unknown')
                 t_played = song.played_at or ""
                 
                 info = f"**{i}. {t_title}** ({format_duration(song.duration)})\n*{t_played} - {t_user}*"
@@ -632,14 +632,14 @@ class FullQueueView(PaginatedView):
         container.add_item(Separator())
         
         if not self.data_list:
-            container.add_item(TextDisplay(f"*{t('empty')}*"))
+            container.add_item(TextDisplay(f"*{get_feedback('empty')}*"))
         else:
             def truncate(text, max_len):
                 return (text[:max_len-3] + '...') if len(text) > max_len else text
 
             items = self.get_page_items()
             for i, song in enumerate(items, self.current_page * self.items_per_page + 1):
-                raw_title = song.title or t('unknown')
+                raw_title = song.title or get_feedback('unknown')
                 t_title = truncate(raw_title, radio.config.list_max_title_len)
                 
                 song_info = f"**{i}. {t_title}** ({format_duration(song.duration)})"

@@ -394,7 +394,7 @@ class WelcomeLayout(BaseView):
         
         # 1. Main Welcome Header
         header = Container(accent_color=embed_color)
-        welcome_text = f"**{t('system_sync')}**\n{t('synchro_subtitle')}"
+        welcome_text = f"**{get_feedback('system_sync')}**\n{t('synchro_subtitle')}"
         header.add_item(TextDisplay(welcome_text))
         
         # 2. Controls Section
@@ -434,7 +434,7 @@ class WelcomeLayout(BaseView):
         
         # 3. Mode Display (Always show, even in compact)
         status_box = Container(accent_color=Theme.SECONDARY)
-        status_box.add_item(TextDisplay(f"**{t('standby_mode')}**\n*{t('standby_subtitle')}*"))
+        status_box.add_item(TextDisplay(f"**{get_feedback('standby_mode')}**\n*{t('standby_subtitle')}*"))
         self.add_item(status_box)
 
 class FrequencyStationView(BaseView):
@@ -445,7 +445,7 @@ class FrequencyStationView(BaseView):
         super().__init__(radio)
         
         main = Container(accent_color=Theme.BACKGROUND)
-        main.add_item(TextDisplay(f"**{t('system_settings')}**\n{t('synchro_settings_subtitle')}"))
+        main.add_item(TextDisplay(f"**{get_feedback('system_settings')}**\n{t('synchro_settings_subtitle')}"))
         
         guild = _bot_ref.get_guild(_config_ref.guild_id)
         if guild:
@@ -493,18 +493,20 @@ class NowPlayingView(BaseView):
         else:
             accent_color = Theme.IDLE
 
-        status_text = t("now_playing")
+        status_key = "now_playing"
         if radio.status == RadioStatusEnum.PAUSED:
-            status_text = t("paused")
+            status_key = "paused"
         elif radio.status == RadioStatusEnum.STOPPED:
-            status_text = t("stopped")
+            status_key = "stopped"
         elif radio.status == RadioStatusEnum.BUFFERING:
-            status_text = t("buffering")
+            status_key = "buffering"
         elif radio.status == RadioStatusEnum.IDLE:
-            status_text = t("idle")
+            status_key = "idle"
             # If idle and no song, use the generic idle status
             if not song or not song.path:
-                status_text = t("idle_status")
+                status_key = "idle_status"
+
+        status_display = get_feedback(status_key)
 
         master = Container(accent_color=accent_color)
         
@@ -525,28 +527,15 @@ class NowPlayingView(BaseView):
             elif "soundcloud.com" in song.webpage_url:
                 source = "SoundCloud"
         
-        # Rich info for both modes (only buttons change)
-        current_status_icon = Icons.STATUS
-        if radio.status == RadioStatusEnum.PLAYING:
-            current_status_icon = Icons.HEADPHONES
-        elif radio.status == RadioStatusEnum.PAUSED:
-            current_status_icon = Icons.PAUSE
-        elif radio.status == RadioStatusEnum.STOPPED:
-            current_status_icon = Icons.STOP
-        elif radio.status == RadioStatusEnum.BUFFERING:
-            current_status_icon = Icons.BUFFERING
-        elif radio.status == RadioStatusEnum.IDLE:
-            current_status_icon = Icons.IDLE
-
         title_display = truncated_title
         web_url = song.webpage_url if song else None
         if web_url:
             title_display = f"[{truncated_title}]({web_url})"
 
         info_lines = [
-            f"**{current_status_icon} {status_text}**",
-            f"**{t('uploader')}:** {truncated_uploader}",
-            f"**{t('title')}:** {title_display}"
+            f"**{status_display}**",
+            f"**{get_feedback('uploader')}:** {truncated_uploader}",
+            f"**{get_feedback('title')}:** {title_display}"
         ]
         if source:
             info_lines.append(f"**{t('source')}:** {source}")

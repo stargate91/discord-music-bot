@@ -10,16 +10,20 @@ from core.models import Song
 from ui_theme import Theme
 from logger import log
 
+# These are global variables used by the UI system to keep track of the bot
+# and the function that updates the player screen.
 _update_callback = None
 _bot_ref = None
 _config_ref = None
 
+# This function initializes the UI system with the bot instance and config.
 def init_player_ui(bot, config, update_fn):
     global _bot_ref, _config_ref, _update_callback
     _bot_ref = bot
     _config_ref = config
     _update_callback = update_fn
 
+# This is a dropdown menu (Select) to choose a voice channel (Station).
 class StationSelect(discord.ui.Select):
     def __init__(self, radio, channels, custom_id="station_select"):
         self.radio = radio
@@ -36,11 +40,13 @@ class StationSelect(discord.ui.Select):
 
     @handle_ui_error
     async def callback(self, interaction: discord.Interaction):
+        # When a channel is picked, we tell the radio to join it
         channel_id = int(self.values[0])
         self.radio.dispatch(RadioAction.JOIN, channel_id, user=interaction.user)
         if not interaction.response.is_done():
             await interaction.response.defer()
 
+# This dropdown allows users to change the bot's language (English or Hungarian).
 class LanguageSelect(discord.ui.Select):
     def __init__(self, radio, custom_id="language_select"):
         self.radio = radio
@@ -66,8 +72,10 @@ class LanguageSelect(discord.ui.Select):
         if not interaction.response.is_done():
             await interaction.response.defer(ephemeral=True)
         if _update_callback:
+            # We trigger a full UI refresh so the labels update immediately
             await _update_callback(self.radio.current_song)
 
+# A simple button to kick the bot out of the voice channel.
 class DisconnectButton(discord.ui.Button):
     def __init__(self, radio):
         super().__init__(
@@ -80,10 +88,12 @@ class DisconnectButton(discord.ui.Button):
 
     @handle_ui_error
     async def callback(self, interaction: discord.Interaction):
+        # We start the disconnect process
         self.radio.dispatch(RadioAction.DISCONNECT, user=interaction.user)
         if not interaction.response.is_done():
             await interaction.response.defer()
 
+# This button handles both Play and Pause actions depending on the bot's status.
 class PlayPauseButton(discord.ui.Button):
     def __init__(self, radio):
         is_paused = radio.status in [RadioStatusEnum.PAUSED, RadioStatusEnum.STOPPED, RadioStatusEnum.IDLE]
@@ -108,8 +118,10 @@ class PlayPauseButton(discord.ui.Button):
         if self.radio.status in [RadioStatusEnum.PAUSED, RadioStatusEnum.STOPPED, RadioStatusEnum.IDLE]:
             self.radio.dispatch(RadioAction.REPLAY, user=interaction.user)
         else:
+            # If it was playing, we pause it
             self.radio.dispatch(RadioAction.PAUSE, user=interaction.user)
 
+# A button to stop the music entirely.
 class StopButton(discord.ui.Button):
     def __init__(self, radio):
         # Always secondary as requested (no red/green/blue here)
@@ -131,6 +143,7 @@ class StopButton(discord.ui.Button):
             await interaction.response.defer()
         self.radio.dispatch(RadioAction.STOP, user=interaction.user)
 
+# Skips to the next song in the queue.
 class ForwardButton(discord.ui.Button):
     def __init__(self, radio):
         super().__init__(
@@ -148,6 +161,7 @@ class ForwardButton(discord.ui.Button):
             await interaction.response.defer()
         self.radio.dispatch(RadioAction.SKIP, user=interaction.user)
 
+# Goes back to the previous song from the history.
 class BackButton(discord.ui.Button):
     def __init__(self, radio):
         super().__init__(
@@ -165,6 +179,7 @@ class BackButton(discord.ui.Button):
             await interaction.response.defer()
         self.radio.dispatch(RadioAction.BACK, user=interaction.user)
 
+# Opens a pop-up window to jump to a specific time.
 class SeekButton(discord.ui.Button):
     def __init__(self, radio):
         super().__init__(
@@ -184,6 +199,7 @@ class SeekButton(discord.ui.Button):
         modal = SeekModal(self.radio)
         await interaction.response.send_modal(modal)
 
+# This is the actual pop-up (Modal) for time jumping.
 class SeekModal(Modal):
     def __init__(self, radio):
         super().__init__(title=t("jump_modal_title"))
@@ -219,6 +235,7 @@ class SeekModal(Modal):
         if not interaction.response.is_done():
             await interaction.response.defer()
 
+# Button to open the volume settings pop-up.
 class VolumeButton(discord.ui.Button):
     def __init__(self, radio):
         super().__init__(
@@ -234,6 +251,7 @@ class VolumeButton(discord.ui.Button):
         modal = VolumeModal(self.radio)
         await interaction.response.send_modal(modal)
 
+# This pop-up (Modal) asks for a number between 0 and 100.
 class VolumeModal(Modal):
     def __init__(self, radio):
         super().__init__(title=t("vol_modal_title"))
@@ -261,6 +279,7 @@ class VolumeModal(Modal):
             await respond(interaction, get_feedback("invalid_number"), delete_after=self.radio.config.notification_timeout)
 
 
+# A heart button to add/remove the current song from the user's favorites.
 class FavoriteToggleButton(discord.ui.Button):
     def __init__(self, radio, song: Song | None):
         # Determine initial favorite state based on the requester or the last active user
@@ -304,10 +323,11 @@ class FavoriteToggleButton(discord.ui.Button):
             # We try to edit the message the button is on
             await interaction.message.edit(view=self.view)
         except Exception as e:
+            # Not a big deal if it fails, the regular update loop will catch up
             log.debug(f"[UI] Could not refresh player view: {e}")
-            # Non-critical if fails, the regular refresh loop will fix it anyway
 
 
+# Dropdown to switch between Full (text + icons) and Compact (just icons) view modes.
 class UIStyleSelect(discord.ui.Select):
     def __init__(self, radio, custom_id="uistyle_select"):
         self.radio = radio
@@ -330,8 +350,10 @@ class UIStyleSelect(discord.ui.Select):
         if not interaction.response.is_done():
             await interaction.response.defer(ephemeral=True)
         if _update_callback:
+            # Redraw the player in the new style
             await _update_callback(self.radio.current_song)
 
+# Simple button to show the help window.
 class HelpButton(discord.ui.Button):
     def __init__(self, radio):
         super().__init__(
@@ -345,8 +367,10 @@ class HelpButton(discord.ui.Button):
     @handle_ui_error
     async def callback(self, interaction: discord.Interaction):
         view = HelpView(self.radio)
-        await respond(interaction, embed=view.get_embed()) # No delete_after for window view
+        # We send the help as a private (ephemeral) embed window
+        await respond(interaction, embed=view.get_embed())
 
+# This class builds the help text with all available commands.
 class HelpView:
     def __init__(self, radio):
         self.radio = radio
@@ -381,10 +405,12 @@ class HelpView:
             
         return embed
 
+# --- Layouts (How the screens are put together) ---
+
 class WelcomeLayout(BaseView):
     """
-    Premium Welcome Screen for the Radio Bot.
-    Shown when the bot is not connected to a voice channel.
+    This is shown when the bot is just "sitting" in the channel, 
+    not connected to any voice yet. It's like a TV homepage.
     """
     def __init__(self, radio):
         super().__init__(radio)
@@ -430,16 +456,18 @@ class WelcomeLayout(BaseView):
             row_lib.add_item(HelpButton(radio))
             header.add_item(row_lib)
 
+        # Add everything to the screen (View)
         self.add_item(header)
         
-        # 3. Mode Display (Always show, even in compact)
+        # 3. Status Bar at the bottom
         status_box = Container(accent_color=Theme.SECONDARY)
         status_box.add_item(TextDisplay(f"**{get_feedback('standby_mode')}**\n*{t('standby_subtitle')}*"))
         self.add_item(status_box)
 
 class FrequencyStationView(BaseView):
     """
-    Standard Station View shown during active connection.
+    This is shown when the bot successfully JOINED a voice channel.
+    It shows management buttons instead of a welcome header.
     """
     def __init__(self, radio):
         super().__init__(radio)
@@ -477,6 +505,10 @@ class FrequencyStationView(BaseView):
         self.add_item(main)
 
 class NowPlayingView(BaseView):
+    """
+    The main music player screen. This is where you see the song title, artist, 
+    progress bar and all the control buttons.
+    """
     def __init__(self, radio, song: Song | None = None):
         super().__init__(radio)
         song = song or radio.current_song
@@ -585,6 +617,7 @@ class NowPlayingView(BaseView):
             f"{progress_bar}"
         ])
         
+        # Show who requested the song and which channel it's in
         if radio.last_user:
             channel_name = ""
             if radio.voice and radio.voice.channel:
@@ -632,5 +665,5 @@ class NowPlayingView(BaseView):
         
         # row3 containing LibraryButton removed as requested
         
-        # Finally, add the master (now containing everything) to the view
+        # Add the whole container we just built to the View object
         self.add_item(master)

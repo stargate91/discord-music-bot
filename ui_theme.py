@@ -1,6 +1,9 @@
 import discord
 
+# This class stores all the color codes used by the bot's UI.
+# We use hex codes (like 0x2b2d31) which Discord understands as colors.
 class Theme:
+    # Default colors (mostly dark grey and some bright status colors)
     PRIMARY = 0x2b2d31
     SECONDARY = 0x2b2d31
     SUCCESS = 0x57F287
@@ -14,6 +17,8 @@ class Theme:
     IDLE = 0x2b2d31
     BUFFERING = 0xEB459E
 
+    # This function reads the config file and overwrites the default colors
+    # if the user specified different ones in their settings.
     @classmethod
     def init_theme(cls, config):
         theme_data = config.ui_settings.get("theme", {})

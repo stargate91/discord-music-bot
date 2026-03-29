@@ -11,6 +11,7 @@ from logger import log
 from ui_theme import Theme
 from core.models import Song
 
+# This button opens a pop-up (Modal) where you can paste a direct YouTube or SoundCloud link.
 class WebLinkButton(discord.ui.Button):
     def __init__(self, radio, custom_id="weblink_button"):
         super().__init__(
@@ -23,9 +24,9 @@ class WebLinkButton(discord.ui.Button):
 
     @handle_ui_error
     async def callback(self, interaction: discord.Interaction):
-        modal = WebLinkModal(self.radio)
         await interaction.response.send_modal(modal)
 
+# This is the pop-up window used to input a web link.
 class WebLinkModal(Modal):
     def __init__(self, radio):
         super().__init__(title=t("weblink_modal_title"))
@@ -48,6 +49,7 @@ class WebLinkModal(Modal):
         self.radio.dispatch(RadioAction.ADD_EXT_LINK, url, user=interaction.user)
         await respond(interaction, get_feedback("weblink_added"), delete_after=self.radio.config.notification_timeout)
 
+# This button opens the search window where you can type keywords (like "lofi music").
 class SearchButton(discord.ui.Button):
     def __init__(self, radio):
         super().__init__(
@@ -63,6 +65,7 @@ class SearchButton(discord.ui.Button):
         modal = SearchModal(self.radio)
         await interaction.response.send_modal(modal)
 
+# This pop-up window asks the user what they want to search for.
 class SearchModal(Modal):
     def __init__(self, radio):
         super().__init__(title=t("search_modal_title"))
@@ -100,7 +103,8 @@ class SearchModal(Modal):
 
         log.info(f"[SEARCH] Found {len(results)} results for: {query}")
         
-        # Best Practice: Auto-populate the cache with search results
+        # We save the results into the database (cache). 
+        # This way, if someone plays the same song later, it loads super fast!
         for song in results:
             self.radio.db.set_cache(
                 url=song.path,
@@ -112,8 +116,10 @@ class SearchModal(Modal):
             
         view = SearchResultsView(self.radio, results, query=query, user=interaction.user)
         await interaction.followup.send(view=view, ephemeral=True)
+        # We delete the "Searching..." temporary message
         await safe_delete_message(msg)
 
+# A small "+" button next to search results to add them to the queue.
 class SearchResultAddButton(discord.ui.Button):
     def __init__(self, radio, result):
         super().__init__(emoji=Icons.ADD, style=discord.ButtonStyle.secondary)
@@ -163,6 +169,7 @@ class FavoriteListButton(discord.ui.Button):
         
         await respond(interaction, get_feedback(key), delete_after=self.radio.config.notification_timeout)
 
+# This screen displays the search results in a page-by-page list.
 class SearchResultsView(PaginatedView):
     def __init__(self, radio, results, query=None, user=None, page=0):
         # Safety conversion for legacy dict results
@@ -245,6 +252,7 @@ class SearchResultsView(PaginatedView):
         )
         await interaction.edit_original_response(view=new_view)
 
+# This button opens the user's personal favorites collection.
 class LibraryButton(discord.ui.Button):
     def __init__(self, radio, custom_id="library_button"):
         super().__init__(
@@ -260,6 +268,7 @@ class LibraryButton(discord.ui.Button):
         view = FavoritesView(self.radio, interaction.user.id)
         await interaction.response.send_message(view=view, ephemeral=True)
 
+# A small "X" button to remove a song from the favorites list.
 class FavoriteRemoveButton(discord.ui.Button):
     def __init__(self, radio, song: Song):
         super().__init__(emoji=Icons.REMOVE, style=discord.ButtonStyle.secondary)
@@ -281,6 +290,7 @@ class FavoriteRemoveButton(discord.ui.Button):
         # Optional: send a followup confirmation
         await respond(interaction, get_feedback('removed_from_fav'), delete_after=self.radio.config.notification_timeout)
 
+# This screen shows the list of all songs the user has "hearted".
 class FavoritesView(PaginatedView):
     def __init__(self, radio, user_id, page=0):
         favs = radio.fav_manager.get_favorites(user_id)
@@ -354,6 +364,7 @@ class FavoritesView(PaginatedView):
         new_view = FavoritesView(self.radio, self.user_id, page=self.current_page)
         await interaction.edit_original_response(view=new_view)
 
+# A button that adds every song from your favorites into the current queue at once.
 class AddAllFavoritesButton(discord.ui.Button):
     def __init__(self, radio, songs):
         super().__init__(
@@ -394,6 +405,7 @@ class AddAllFavoritesButton(discord.ui.Button):
             
         await respond(interaction, get_feedback('added_all_to_queue'), delete_after=self.radio.config.notification_timeout)
 
+# Deletes every song from the user's favorite list. Danger!
 class ClearFavoritesButton(discord.ui.Button):
     def __init__(self, radio, user_id):
         super().__init__(
@@ -416,6 +428,7 @@ class ClearFavoritesButton(discord.ui.Button):
             
         await respond(interaction, get_feedback('cleared_favorites'), delete_after=self.radio.config.notification_timeout)
 
+# This button opens a screen showing the songs that were played recently.
 class HistoryButton(discord.ui.Button):
     def __init__(self, radio, custom_id="history_button"):
         super().__init__(
@@ -431,6 +444,7 @@ class HistoryButton(discord.ui.Button):
         view = HistoryView(self.radio, user=interaction.user)
         await interaction.response.send_message(view=view, ephemeral=True)
 
+# This screen shows the past songs. Only admins can clear this list.
 class HistoryView(PaginatedView):
     def __init__(self, radio, page=0, user=None):
         # The history list from the radio
@@ -508,6 +522,7 @@ class HistoryView(PaginatedView):
         new_view = HistoryView(self.radio, page=self.current_page, user=self.user)
         await interaction.edit_original_response(view=new_view)
 
+# Admin-only button to wipe the global history.
 class ClearHistoryButton(discord.ui.Button):
     def __init__(self, radio):
         super().__init__(
@@ -536,6 +551,7 @@ class ClearHistoryButton(discord.ui.Button):
         
         await respond(interaction, get_feedback("cleared_history"), delete_after=self.radio.config.notification_timeout)
 
+# This button opens the full list of upcoming songs (the Queue).
 class QueueViewButton(discord.ui.Button):
     def __init__(self, radio):
         from radio_actions import RadioState
@@ -554,6 +570,7 @@ class QueueViewButton(discord.ui.Button):
         view = FullQueueView(self.radio, page=0, user=interaction.user)
         await interaction.response.send_message(view=view, ephemeral=True)
 
+# A button to remove a single song from the upcoming list.
 class RemoveFromQueueButton(discord.ui.Button):
     def __init__(self, radio, song):
         super().__init__(emoji=Icons.REMOVE, style=discord.ButtonStyle.secondary)
@@ -572,6 +589,7 @@ class RemoveFromQueueButton(discord.ui.Button):
         if hasattr(self.view, 'refresh_view'):
             await self.view.refresh_view(interaction)
 
+# A button to delete ALL songs that are currently waiting in the queue.
 class ClearQueueButton(discord.ui.Button):
     def __init__(self, radio):
         super().__init__(label=t("clear_queue_label"), emoji=Icons.SWEEP, style=discord.ButtonStyle.secondary)
@@ -588,6 +606,7 @@ class ClearQueueButton(discord.ui.Button):
             self.view.current_page = 0
             await self.view.refresh_view(interaction)
 
+# Moves a song one position higher in the queue.
 class MoveUpButton(discord.ui.Button):
     def __init__(self, radio, song, is_first=False):
         super().__init__(emoji=Icons.MOVE_UP, style=discord.ButtonStyle.secondary, disabled=is_first)
@@ -604,6 +623,7 @@ class MoveUpButton(discord.ui.Button):
         if hasattr(self.view, 'refresh_view'):
             await self.view.refresh_view(interaction)
 
+# Moves a song one position lower in the queue.
 class MoveDownButton(discord.ui.Button):
     def __init__(self, radio, song, is_last=False):
         super().__init__(emoji=Icons.MOVE_DOWN, style=discord.ButtonStyle.secondary, disabled=is_last)
@@ -620,6 +640,7 @@ class MoveDownButton(discord.ui.Button):
         if hasattr(self.view, 'refresh_view'):
             await self.view.refresh_view(interaction)
 
+# This screen displays the entire upcoming song list with rearrange buttons.
 class FullQueueView(PaginatedView):
     def __init__(self, radio, page=0, user: Optional[discord.Member | discord.User] = None):
         # Force all items to be Song objects if they are dicts

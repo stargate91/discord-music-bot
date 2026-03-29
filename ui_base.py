@@ -6,6 +6,9 @@ from ui_translate import t
 from ui_utils import get_feedback
 from logger import log
 
+# This is a "Decorator". It's like a wrapper around other functions.
+# We use it to catch errors in button clicks so the bot doesn't crash, 
+# and also to check if the user is in the same voice channel as the bot.
 def handle_ui_error(func):
     """Decorator to handle errors in UI callbacks and enforce permissions."""
     async def wrapper(*args, **kwargs):
@@ -62,6 +65,8 @@ async def _send_error_msg(interaction):
     except:
         pass # Final line of defense
 
+# This is the "Father" class for all our screens. 
+# It makes sure every view has access to the radio object.
 class BaseView(LayoutView):
     """Base class for all Radio Bot views with shared logic."""
 
@@ -82,6 +87,8 @@ class BaseView(LayoutView):
         except Exception as e:
             log.error(f"Error in View.on_error: {e}")
 
+# This is a special view for lists (like the Queue or History).
+# It can split a long list into multiple "pages" that you can flip through.
 class PaginatedView(BaseView):
     """Base class for views requiring pagination."""
 

@@ -129,6 +129,16 @@ class Database:
             from logger import log
             log.error(f"Cache set error: {e}")
 
+    def clear_cache(self):
+        """Resets the local_path for all cached songs, effectively clearing the physical cache reference."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.execute("UPDATE song_cache SET local_path = NULL")
+                conn.commit()
+        except Exception as e:
+            from logger import log
+            log.error(f"Error resetting local_path in cache DB: {e}")
+
     # --- History Methods ---
     def add_history(self, song: Song):
         """Saves a song to the history table without size constraints."""

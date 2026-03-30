@@ -82,7 +82,7 @@ def get_feedback(key: str, **kwargs) -> str:
         # --- Processing / Waiting (Active tasks) ---
         "search_processing": Icons.SEARCH,       # Currently looking on YouTube
         "syncing": Icons.SYNC,                   # Connecting to voice channel
-        "severing": Icons.CLOSE,                 # Leaving the voice channel
+        "severing": Icons.DISCONNECT,                 # Leaving the voice channel
         "resuming": Icons.PLAY,                  # Continuing the music
         "forwarding": Icons.NEXT,                # Moving to the next song
         "backing": Icons.BACK,                   # Moving back to the previous song

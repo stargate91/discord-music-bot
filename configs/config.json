@@ -71,6 +71,7 @@
         "ephemeral_cache": true
     },
     "emojis": {
+        "SUCCESS": "✅",
         "GEAR": "⚙️",
         "RADIO": "📻",
         "HELP": "❓",

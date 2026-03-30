@@ -1,6 +1,7 @@
 import discord
 
 class Icons:
+    SUCCESS: discord.PartialEmoji = None
     ADD: discord.PartialEmoji = None
     BACK: discord.PartialEmoji = None
     GEAR: discord.PartialEmoji = None
@@ -54,6 +55,7 @@ class Icons:
             return discord.PartialEmoji.from_str(val)
 
         # Core Icons
+        cls.SUCCESS = get("SUCCESS")
         cls.ADD = get("ADD")
         cls.BACK = get("BACK")
         cls.GEAR = get("GEAR")

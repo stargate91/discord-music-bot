@@ -86,11 +86,11 @@ def get_feedback(key: str, **kwargs) -> str:
         "restarting": Icons.SYNC,                # Bot is rebooting
         
         # --- Success / Confirmation (Positive feedback) ---
-        "weblink_added": Icons.QUEUE,            # Link successfully added to list
-        "vol_set": Icons.VOLUME,                 # Volume changed successfully
+        "weblink_added": Icons.SUCCESS,          # Link successfully added to list
+        "vol_set": Icons.SUCCESS,               # Volume changed successfully
         "added_to_fav": Icons.HEART_PLUS,        # Song added to favorites
         "removed_from_fav": Icons.HEART_MINUS,   # Song removed from favorites
-        "added_all_to_queue": Icons.QUEUE,       # All songs from a list added
+        "added_all_to_queue": Icons.SUCCESS,     # All songs from a list added
         "cleared_favorites": Icons.SWEEP,        # Favorites list wiped clean
         "cleared_history": Icons.SWEEP,          # History list wiped clean
         "queue_shuffled": Icons.SWEEP,           # Queue order randomized
@@ -98,9 +98,9 @@ def get_feedback(key: str, **kwargs) -> str:
         "pausing": Icons.PAUSE,                  # Confirmation that it's paused
         "stopping": Icons.STOP,                  # Confirmation that it's stopped
         "loop_enabled": Icons.REPEAT,            # Single song repeat is on
-        "loop_disabled": Icons.CLOSE,            # Single song repeat is off
+        "loop_disabled": Icons.SUCCESS,          # Single song repeat is off
         "loop_queue_enabled": Icons.REPEAT,      # Whole queue repeat is on
-        "loop_queue_disabled": Icons.CLOSE,      # Whole queue repeat is off
+        "loop_queue_disabled": Icons.SUCCESS,    # Whole queue repeat is off
     }
     
     emoji = icons_map.get(key, "")

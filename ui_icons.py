@@ -28,7 +28,6 @@ class Icons:
     SEEK: discord.PartialEmoji = None
     SKIP: discord.PartialEmoji = None
     STANDBY: discord.PartialEmoji = None
-    STATUS: discord.PartialEmoji = None
     STOP: discord.PartialEmoji = None
     SWEEP: discord.PartialEmoji = None
     SYNC: discord.PartialEmoji = None
@@ -47,14 +46,31 @@ class Icons:
 
     @classmethod
     def setup(cls, config):
-        """Initializes all icons from config or defaults."""
-        icons_data = config.emojis if hasattr(config, "emojis") else {}
+        """Initializes all icons from config or hardcoded defaults."""
+        # --- Hardcoded Unicode Defaults (Classic Fallback) ---
+        defaults = {
+            "SUCCESS": "✅", "GEAR": "⚙️", "RADIO": "📻", "HELP": "❓", "SWEEP": "🧹",
+            "MOVE_DOWN": "🔽", "PREV": "◀️", "NEXT": "▶️", "MOVE_UP": "🔼", "SEEK": "⏩",
+            "FOLDER_HEART": "📂", "GLOBE": "🌐", "HEADPHONES": "🎧",
+            "HEART_MINUS": "💔", "HEART_PLUS": "❤️", "IDLE": "🌙", "SYNC": "🔄",
+            "PAUSE": "⏸️", "PLAY": "▶️", "ADD": "➕", "QUEUE": "📑", "HISTORY": "📜",
+            "SEARCH": "🔍", "BACK": "⏮️", "SKIP": "⏭️", "STOP": "⏹️", "STANDBY": "⏳",
+            "BUFFERING": "⏳", "REMOVE": "🗑️", "WARNING": "⚠️", "DISCONNECT": "🔌",
+            "VOLUME": "🔊", "REPEAT": "🔁", "CLOSE": "❌",
+            "PB_START": "[", "PB_LEFT": "█", "PB_FULL": "█", "PB_KNOB": "🔘",
+            "PB_EMPTY": "░", "PB_RIGHT": "]", "PB_END": "]"
+        }
+
+        provided_data = config.emojis if hasattr(config, "emojis") else {}
         
-        def get(name, default="❓"):
-            val = icons_data.get(name, default)
+        def get(name):
+            # Check provided config first. If missing or empty string, use hardcoded defaults.
+            val = provided_data.get(name)
+            if not val:
+                val = defaults.get(name, "❓")
             return discord.PartialEmoji.from_str(val)
 
-        # Core Icons
+        # Initialize all class properties
         cls.SUCCESS = get("SUCCESS")
         cls.ADD = get("ADD")
         cls.BACK = get("BACK")
@@ -82,7 +98,6 @@ class Icons:
         cls.SEEK = get("SEEK")
         cls.SKIP = get("SKIP")
         cls.STANDBY = get("STANDBY")
-        cls.STATUS = get("STATUS")
         cls.STOP = get("STOP")
         cls.SWEEP = get("SWEEP")
         cls.SYNC = get("SYNC")
@@ -91,17 +106,13 @@ class Icons:
         cls.REPEAT = get("REPEAT")
         cls.BUFFERING = get("BUFFERING")
         
-        # PB Icons - Minimal ASCII fallback
-        cls.PB_START = get("PB_START", "[")
-        cls.PB_LEFT = get("PB_LEFT", "=")
-        cls.PB_FULL = get("PB_FULL", "=")
-        cls.PB_KNOB = get("PB_KNOB", ">")
-        cls.PB_EMPTY = get("PB_EMPTY", "·")
-        cls.PB_RIGHT = get("PB_RIGHT", "]")
-        cls.PB_END = get("PB_END", "]")
-
-
-
+        cls.PB_START = get("PB_START")
+        cls.PB_LEFT = get("PB_LEFT")
+        cls.PB_FULL = get("PB_FULL")
+        cls.PB_KNOB = get("PB_KNOB")
+        cls.PB_EMPTY = get("PB_EMPTY")
+        cls.PB_RIGHT = get("PB_RIGHT")
+        cls.PB_END = get("PB_END")
 
 # Default initialization
 class DefaultConfig: emojis = {}

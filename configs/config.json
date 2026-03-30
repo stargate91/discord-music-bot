@@ -104,6 +104,7 @@
         "DISCONNECT": "🔌",
         "VOLUME": "🔊",
         "REPEAT": "🔁",
+        "ERROR": "❌",
         "CLOSE": "❌",
         "PB_START": "[",
         "PB_LEFT": "█",

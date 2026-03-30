@@ -5,6 +5,7 @@ class Icons:
     ADD: discord.PartialEmoji = None
     BACK: discord.PartialEmoji = None
     GEAR: discord.PartialEmoji = None
+    ERROR: discord.PartialEmoji = None
     CLOSE: discord.PartialEmoji = None
     DISCONNECT: discord.PartialEmoji = None
     FOLDER_HEART: discord.PartialEmoji = None
@@ -56,7 +57,7 @@ class Icons:
             "PAUSE": "⏸️", "PLAY": "▶️", "ADD": "➕", "QUEUE": "📑", "HISTORY": "📜",
             "SEARCH": "🔍", "BACK": "⏮️", "SKIP": "⏭️", "STOP": "⏹️", "STANDBY": "⏳",
             "BUFFERING": "⏳", "REMOVE": "🗑️", "WARNING": "⚠️", "DISCONNECT": "🔌",
-            "VOLUME": "🔊", "REPEAT": "🔁", "CLOSE": "❌",
+            "VOLUME": "🔊", "REPEAT": "🔁", "CLOSE": "❌", "ERROR": "❌",
             "PB_START": "[", "PB_LEFT": "█", "PB_FULL": "█", "PB_KNOB": "🔘",
             "PB_EMPTY": "░", "PB_RIGHT": "]", "PB_END": "]"
         }
@@ -75,6 +76,7 @@ class Icons:
         cls.ADD = get("ADD")
         cls.BACK = get("BACK")
         cls.GEAR = get("GEAR")
+        cls.ERROR = get("ERROR")
         cls.CLOSE = get("CLOSE")
         cls.DISCONNECT = get("DISCONNECT")
         cls.FOLDER_HEART = get("FOLDER_HEART")

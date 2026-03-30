@@ -29,31 +29,34 @@ def get_feedback(key: str, **kwargs) -> str:
     Returns a translated string prefixed with the appropriate emoji.
     """
     icons_map = {
-        # --- Errors & Warnings (We use warning icon for these) ---
+        # --- Errors (Things that failed or are forbidden) ---
+        "no_permission": Icons.ERROR,            # Bot doesn't have rights to join
+        "admin_only": Icons.ERROR,               # Only admins can do this
+        "error_generic": Icons.ERROR,            # Something went wrong generally
+        "error_resolve": Icons.ERROR,            # Could not process the link
+        "no_playing_error": Icons.ERROR,         # No song playing (generic error)
+        "no_current_track": Icons.ERROR,         # No song playing to jump in
+
+        # --- Warnings (User input/state guidance) ---
         "not_in_same_voice": Icons.WARNING,      # User is in a different voice channel
-        "no_permission": Icons.WARNING,          # Bot doesn't have rights to join
-        "admin_only": Icons.WARNING,             # Only admins can do this
-        "error_generic": Icons.WARNING,          # Something went wrong generally
         "cannot_pause_stopped": Icons.WARNING,   # Music is already stopped, can't pause
         "cannot_seek_stopped": Icons.WARNING,    # Can't jump to time if music is not playing
         "vol_range_error": Icons.WARNING,        # Volume must be between 0 and 100
-        "no_current_track": Icons.WARNING,       # No song playing to jump in
-        "no_next_track": Icons.WARNING,          # End of the queue
-        "no_prev_track": Icons.WARNING,          # No history to go back to
         "format_error": Icons.WARNING,           # Wrong time format (should be mm:ss)
         "too_long": Icons.WARNING,               # Timestamp is longer than the song
         "cooldown_error": Icons.WARNING,         # Clicking too fast, system needs a rest
         "nothing_playing": Icons.WARNING,        # Player is empty
         "invalid_number": Icons.WARNING,         # Not a valid number given
         "empty": Icons.WARNING,                  # List is empty
-        "wrong_channel_error": Icons.WARNING,     # Used command in wrong channel
-        "error_resolve": Icons.WARNING,          # Could not process the link
+        "no_next_track": Icons.WARNING,          # End of the queue
+        "no_prev_track": Icons.WARNING,          # No history to go back to
+        "wrong_channel_error": Icons.WARNING,    # Used command in wrong channel
         
         # --- Status Messages (Shown in the player header) ---
         "now_playing": Icons.HEADPHONES,         # Music is currently playing
         "paused": Icons.PAUSE,                   # Music is paused
         "stopped": Icons.STOP,                   # Music is stopped
-        "buffering": Icons.BUFFERING,           # Loading the song from the internet
+        "buffering": Icons.BUFFERING,            # Loading the song from the internet
         "idle": Icons.IDLE,                      # Bot is waiting for songs
         "idle_status": Icons.IDLE,               # Detailed waiting message
         "resolving_link": "",                    # Trying to understand what the link is

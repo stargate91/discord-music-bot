@@ -10,6 +10,7 @@ def setup_commands(tree: app_commands.CommandTree, radio):
     async def restricted_channel_check(interaction: discord.Interaction) -> bool:
         # Check if limited to a specific channel
         if interaction.channel_id != radio.config.radio_text_channel_id:
+            await respond(interaction, get_feedback("wrong_channel_error"), ephemeral=True)
             return False
         return True
 
@@ -262,7 +263,7 @@ async def handle_prefix_commands(message: discord.Message, radio):
             await message.channel.send(f"{message.author.mention} " + get_feedback("severing"), delete_after=config.notification_timeout)
 
         elif command in ["skip", "s"]:
-            if radio.queue:
+            if radio.queue or radio.future_queue or radio.is_navigating:
                 radio.dispatch(RadioAction.SKIP, user=message.author)
                 await message.channel.send(f"{message.author.mention} " + get_feedback("forwarding"), delete_after=config.notification_timeout)
             else:
@@ -271,7 +272,7 @@ async def handle_prefix_commands(message: discord.Message, radio):
         elif command in ["back", "b"]:
             if radio.history:
                 radio.dispatch(RadioAction.BACK, user=message.author)
-                await message.channel.send(f"{message.author.mention} " + get_feedback("back_label") + "...", delete_after=config.notification_timeout)
+                await message.channel.send(f"{message.author.mention} " + get_feedback("backing"), delete_after=config.notification_timeout)
             else:
                 await message.channel.send(f"{message.author.mention} " + get_feedback("no_prev_track"), delete_after=config.notification_timeout)
 
@@ -288,21 +289,21 @@ async def handle_prefix_commands(message: discord.Message, radio):
                 vol = int(args[0])
                 if 0 <= vol <= 100:
                     radio.dispatch(RadioAction.SET_VOLUME, vol / 100, user=message.author)
+                    await message.channel.send(f"{message.author.mention} " + get_feedback("vol_set") + f" {vol}%", delete_after=config.notification_timeout)
                 else:
                     await message.channel.send(f"{message.author.mention} " + get_feedback("vol_range_error"), delete_after=config.notification_timeout)
             except:
                 await message.channel.send(f"{message.author.mention} " + get_feedback("invalid_number"), delete_after=config.notification_timeout)
 
         elif command in ["loop", "lt"]:
-            # Check if 'l' is leave or loop. Leave was defined as 'l' at line 218.
-            # I'll use 'loop' for loop and leave 'l' for leave to avoid breaking legacy?
-            # User said "loop a számot", so maybe just 'loop'.
             radio.dispatch(RadioAction.LOOP, user=message.author)
-            await message.channel.send(f"{message.author.mention} {get_feedback('loop_toggle')}", delete_after=config.notification_timeout)
+            msg_key = "loop_enabled" if not radio.loop_mode else "loop_disabled"
+            await message.channel.send(f"{message.author.mention} {get_feedback(msg_key)}", delete_after=config.notification_timeout)
 
         elif command in ["loopq", "lq"]:
             radio.dispatch(RadioAction.LOOP_QUEUE, user=message.author)
-            await message.channel.send(f"{message.author.mention} {get_feedback('loop_queue_toggle')}", delete_after=config.notification_timeout)
+            msg_key = "loop_queue_enabled" if not radio.loop_queue_mode else "loop_queue_disabled"
+            await message.channel.send(f"{message.author.mention} {get_feedback(msg_key)}", delete_after=config.notification_timeout)
 
         elif command in ["shuffle", "sh"]:
             radio.dispatch(RadioAction.SHUFFLE, user=message.author)

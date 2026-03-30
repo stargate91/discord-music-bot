@@ -124,5 +124,6 @@
     "mode_label": "Mode",
     "loop_track_label": "Loop: Track",
     "loop_queue_label": "Loop: Queue",
-    "restarting": "Restarting bot..."
+    "restarting": "Restarting bot...",
+    "wrong_channel_error": "Hey, you can only use this command in the radio channel!"
 }

@@ -125,5 +125,6 @@
     "mode_label": "Mód",
     "loop_track_label": "Szám ismétlése",
     "loop_queue_label": "Várólista ismétlése",
-    "restarting": "Bot újraindítása..."
+    "restarting": "Bot újraindítása...",
+    "wrong_channel_error": "Hé, ezt csak a rádió szobában tudod használni!"
 }

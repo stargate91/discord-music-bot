@@ -90,8 +90,7 @@ class DisconnectButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         # We start the disconnect process
         self.radio.dispatch(RadioAction.DISCONNECT, user=interaction.user)
-        if not interaction.response.is_done():
-            await interaction.response.defer()
+        await respond(interaction, get_feedback("severing"), delete_after=self.radio.config.notification_timeout)
 
 # This button handles both Play and Pause actions depending on the bot's status.
 class PlayPauseButton(discord.ui.Button):
@@ -113,13 +112,13 @@ class PlayPauseButton(discord.ui.Button):
 
     @handle_ui_error
     async def callback(self, interaction: discord.Interaction):
-        if not interaction.response.is_done():
-            await interaction.response.defer()
         if self.radio.status in [RadioStatusEnum.PAUSED, RadioStatusEnum.STOPPED, RadioStatusEnum.IDLE]:
             self.radio.dispatch(RadioAction.REPLAY, user=interaction.user)
+            await respond(interaction, get_feedback("resuming_feedback"), delete_after=self.radio.config.notification_timeout)
         else:
             # If it was playing, we pause it
             self.radio.dispatch(RadioAction.PAUSE, user=interaction.user)
+            await respond(interaction, get_feedback("pausing"), delete_after=self.radio.config.notification_timeout)
 
 # A button to stop the music entirely.
 class StopButton(discord.ui.Button):
@@ -139,9 +138,8 @@ class StopButton(discord.ui.Button):
 
     @handle_ui_error
     async def callback(self, interaction: discord.Interaction):
-        if not interaction.response.is_done():
-            await interaction.response.defer()
         self.radio.dispatch(RadioAction.STOP, user=interaction.user)
+        await respond(interaction, get_feedback("stopping"), delete_after=self.radio.config.notification_timeout)
 
 # Skips to the next song in the queue.
 class ForwardButton(discord.ui.Button):
@@ -157,9 +155,8 @@ class ForwardButton(discord.ui.Button):
 
     @handle_ui_error
     async def callback(self, interaction: discord.Interaction):
-        if not interaction.response.is_done():
-            await interaction.response.defer()
         self.radio.dispatch(RadioAction.SKIP, user=interaction.user)
+        await respond(interaction, get_feedback("forwarding"), delete_after=self.radio.config.notification_timeout)
 
 # Goes back to the previous song from the history.
 class BackButton(discord.ui.Button):
@@ -175,9 +172,8 @@ class BackButton(discord.ui.Button):
 
     @handle_ui_error
     async def callback(self, interaction: discord.Interaction):
-        if not interaction.response.is_done():
-            await interaction.response.defer()
         self.radio.dispatch(RadioAction.BACK, user=interaction.user)
+        await respond(interaction, get_feedback("backing"), delete_after=self.radio.config.notification_timeout)
 
 # Opens a pop-up window to jump to a specific time.
 class SeekButton(discord.ui.Button):
@@ -232,8 +228,8 @@ class SeekModal(Modal):
             return
             
         self.radio.dispatch(RadioAction.SEEK, total_seconds, user=interaction.user)
-        if not interaction.response.is_done():
-            await interaction.response.defer()
+        feedback = f"{get_feedback('jumping')} {ts}"
+        await respond(interaction, feedback, delete_after=self.radio.config.notification_timeout)
 
 # Button to open the volume settings pop-up.
 class VolumeButton(discord.ui.Button):
@@ -271,8 +267,8 @@ class VolumeModal(Modal):
             value = int(self.volume_input.value)
             if 0 <= value <= 100:
                 self.radio.dispatch(RadioAction.SET_VOLUME, value / 100, user=interaction.user)
-                if not interaction.response.is_done():
-                    await interaction.response.defer()
+                feedback = f"{get_feedback('vol_set')} {value}%"
+                await respond(interaction, feedback, delete_after=self.radio.config.notification_timeout)
             else:
                 await respond(interaction, get_feedback("vol_range_error"), delete_after=self.radio.config.notification_timeout)
         except:

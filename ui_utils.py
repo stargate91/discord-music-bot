@@ -46,6 +46,7 @@ def get_feedback(key: str, **kwargs) -> str:
         "nothing_playing": Icons.WARNING,        # Player is empty
         "invalid_number": Icons.WARNING,         # Not a valid number given
         "empty": Icons.WARNING,                  # List is empty
+        "wrong_channel_error": Icons.WARNING,     # Used command in wrong channel
         "error_resolve": Icons.WARNING,          # Could not process the link
         
         # --- Status Messages (Shown in the player header) ---

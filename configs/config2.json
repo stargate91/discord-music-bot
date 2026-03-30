@@ -8,7 +8,9 @@
     "default_language": "hu",
     "default_ui_mode": "full",
     "update_voice_status": true,
-    "forbidden_bot_ids": [1473068888055873697],
+    "forbidden_bot_ids": [
+        1473068888055873697
+    ],
     "ffmpeg_path": "ffmpeg",
     "ytdlp_path": "yt-dlp",
     "languages": [
@@ -71,7 +73,7 @@
         "ephemeral_cache": true
     },
     "emojis": {
-        "SUCCESS": "<:check:1488034775611740260>",
+        "SUCCESS": "",
         "GEAR": "<:settings:1486100616269922534>",
         "RADIO": "<:audiolines:1483588920938725416>",
         "HELP": "<:badgequestionmark:1483588922775965787>",
@@ -100,11 +102,11 @@
         "STANDBY": "<a:trailloading:1483588967696695306>",
         "BUFFERING": "<a:trailloading:1483588967696695306>",
         "REMOVE": "<:trash2:1483588968892076132>",
-        "WARNING": "<:trianglealert:1483588970209087548>",
+        "WARNING": "",
         "DISCONNECT": "<:unplug:1483588972402839773>",
         "VOLUME": "<:volume2:1483588973761925141>",
         "REPEAT": "<:repeat:1486434291830489188>",
-        "ERROR": "<:x_:1483588975674261514>",
+        "ERROR": "",
         "CLOSE": "<:x_:1483588975674261514>",
         "PB_START": "<:pbleftfullstart:1483589212564357142>",
         "PB_LEFT": "<:pbleftfull:1483589211125846026>",

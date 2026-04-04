@@ -1,5 +1,18 @@
 {
-    "holding_rhythm": "Taking a beauty break. 💅",
-    "waiting_melody": "Waiting for a better taste in music...",
-    "at_command": "I'm bored. Entertain me."
+    "holding_rhythm": [
+        "I'm posing, give me a sec! 📸",
+        "Just fixing my beauty marks... 💄",
+        "Taking a breather... enjoy the view! 😏"
+    ],
+    "waiting_melody": [
+        "Just looking around... like what you see? 😏",
+        "Who wants to see me dance? 💃",
+        "Waiting for someone with actual taste in music... 💋",
+        "I'm bored. Entertain me already! ✨"
+    ],
+    "at_command": [
+        "At your command, darling. 👋",
+        "I've been waiting. Shall we start? 🔥",
+        "I'll do anything... if you ask nicely. 💋"
+    ]
 }

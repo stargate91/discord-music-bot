@@ -1,5 +1,18 @@
 {
-    "holding_rhythm": "Pihenőidő. Ne nyúlj a súlyokhoz! 🛑",
-    "waiting_melody": "Épp a szervert gyúrom. 🏋️‍♀️",
-    "at_command": "Edzés vége. Kész a parancsra."
+    "holding_rhythm": [
+        "Protein szünet! Ne lógd el az edzést! 🥤",
+        "Vizes pihenő... 🧖‍♀️",
+        "Ujjpercek bemelegítése... 🖐️"
+    ],
+    "waiting_melody": [
+        "Szerver-guggolás: 99/100... 💪",
+        "Bemelegítés kész. Mi szóljon? 🏀",
+        "Épp a bit-izmokat gyúrom. 🏋️‍♀️",
+        "Ki jön egy meccsre? 🏀"
+    ],
+    "at_command": [
+        "Edzés vége. Készen állok. 👟",
+        "Minden rendszeregység feszül. Indulhatunk? ⚡",
+        "A parancsod a motivációm. 👋"
+    ]
 }

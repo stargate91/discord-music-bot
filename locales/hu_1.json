@@ -1,5 +1,18 @@
 {
-    "holding_rhythm": "Szépségtapasz szünet. 💅",
-    "waiting_melody": "Valakinek végre legyen ízlése...",
-    "at_command": "Unatkozom. Szórakoztass."
+    "holding_rhythm": [
+        "Pózolok, várj egy percet! 📸",
+        "Szépségtapaszt igazítok... 💄",
+        "Lélegzetvételnyi szünet... nézz rám közben! 😏"
+    ],
+    "waiting_melody": [
+        "Csak nézelődöm... tetszik amit látsz? 😏",
+        "Ki akarja, hogy riszáljak? 💃",
+        "Várok egy dalfelismerő zsenire... 💋",
+        "Unatkozom. Szórakoztass már végre! ✨"
+    ],
+    "at_command": [
+        "Parancsodra, szívem. 👋",
+        "Már vártalak. Kezdhetjük? 🔥",
+        "Bármit megteszek... ha szépen kéred. 💋"
+    ]
 }

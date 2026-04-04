@@ -75,15 +75,17 @@ class UIManager:
                 )
                 await self.bot.change_presence(activity=activity)
             else:
-                # Elegant messages for Tatiana when not playing
+                import random
+                # Handle potential list of messages for persona variety
                 if self.radio.status == RadioStatusEnum.PAUSED:
-                    msg = t('holding_rhythm')
+                    msg_src = t('holding_rhythm')
                 elif self.radio.status == RadioStatusEnum.IDLE:
-                    msg = t('waiting_melody')
+                    msg_src = t('waiting_melody')
                 else: # STOPPED or other
-                    msg = t('at_command')
+                    msg_src = t('at_command')
                 
-                await self.bot.change_presence(activity=discord.Game(name=msg))
+                final_msg = random.choice(msg_src) if isinstance(msg_src, list) else msg_src
+                await self.bot.change_presence(activity=discord.Game(name=final_msg))
         except Exception as e:
             log.debug(f"Presence update failed: {e}")
 

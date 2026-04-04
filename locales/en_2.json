@@ -1,5 +1,18 @@
 {
-    "holding_rhythm": "Cooldown. Don't touch the bench. 🛑",
-    "waiting_melody": "Bench-pressing the server logs. 🏋️‍♀️",
-    "at_command": "Workout over. Ready for duty."
+    "holding_rhythm": [
+        "Protein break! Don't skip your workout! 🥤",
+        "Water break... stay hydrated! 🧖‍♀️",
+        "Warming up the knuckles... 🖐️"
+    ],
+    "waiting_melody": [
+        "Server-squats: 99/100... 💪",
+        "Warmup done. What's next? 🏀",
+        "Working those bit-muscles. 🏋️‍♀️",
+        "Anyone up for a game? 🏀"
+    ],
+    "at_command": [
+        "Training over. I'm ready. 👟",
+        "All systems pumped. Shall we start? ⚡",
+        "Your command is my motivation. 👋"
+    ]
 }

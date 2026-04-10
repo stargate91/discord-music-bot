@@ -278,9 +278,9 @@ class VolumeModal(Modal):
 # A heart button to add/remove the current song from the user's favorites.
 class FavoriteToggleButton(discord.ui.Button):
     def __init__(self, radio, song: Song | None):
-        # Determine initial favorite state based on the requester or the last active user
+        # Determine initial favorite state based on the user currently handling the UI
         is_fav = False
-        target_user_id = (song.user_id if song else None) or (str(radio.last_user.id) if radio.last_user else None)
+        target_user_id = (str(radio.last_user.id) if radio.last_user else None) or (song.user_id if song else None)
         
         if song and target_user_id:
             is_fav = radio.fav_manager.is_favorite(target_user_id, song)

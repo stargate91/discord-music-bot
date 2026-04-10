@@ -546,8 +546,8 @@ class RadioPlayer:
             if self.radio.track_start_time and self.radio.status == RadioStatusEnum.PLAYING:
                 elapsed += (asyncio.get_event_loop().time() - self.radio.track_start_time)
             
-            # If we've played more than 5 seconds, "Back" just restarts the current song.
-            if elapsed > 5.0:
+            # If we've played more than 10 seconds, "Back" just restarts the current song.
+            if elapsed > 10.0:
                 log.info(f"[PLAYER] Restarting current track (elapsed: {int(elapsed)}s)")
                 self.radio.seek_position = 0
                 self.radio.is_seeking = True
@@ -558,9 +558,9 @@ class RadioPlayer:
             log.info(f"[PLAYER] Navigating to previous track in history (elapsed: {int(elapsed)}s)")
             
             # Use pointer for non-destructive back
-            # If we are currently navigating, we use the current ptr. 
-            # If not, we start at 1 to skip the entry we might have just added (or about to add)
-            next_ptr = self.radio.history_ptr + (1 if self.radio.current_song and not self.radio.is_navigating else 0)
+            # If we are currently navigating, we move one further back. 
+            # If not, we start at 0 (the most recent song in history).
+            next_ptr = self.radio.history_ptr + (1 if self.radio.is_navigating else 0)
             back_song = self.radio.history_manager.get_latest(offset=next_ptr)
 
             if back_song:

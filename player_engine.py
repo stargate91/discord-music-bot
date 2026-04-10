@@ -306,10 +306,9 @@ class RadioPlayer:
             self.radio.current_song = None
             return
 
-        # 2. History Recording (Only if not browsing)
-        # Move AFTER _resolve_source to ensure we have the real title
-        if not self.radio.is_navigating:
-            self.radio.history_manager.add(self.radio.current_song)
+        # 2. History Recording Setup
+        self.history_recorded = False
+        self.playback_start_time = asyncio.get_event_loop().time()
 
         # 3. Play and Monitor
         self.radio.track_start_offset = self.radio.seek_position or 0.0
@@ -448,9 +447,19 @@ class RadioPlayer:
         """Listens for actions while a track is playing."""
         while not done.is_set():
             try:
-                # Continuous solitary check
+                # Constant health checks
                 if await self._check_solitary_timeout(voice):
                     break
+                
+                # Delayed History Recording (Only if not already recorded and not browsing)
+                if not self.history_recorded and not self.radio.is_navigating and song:
+                    elapsed_total = self.radio.track_start_offset + (asyncio.get_event_loop().time() - self.radio.track_start_time)
+                    # Record after 15 seconds or 10% of duration (for short tracks)
+                    threshold = min(15.0, (song.duration * 0.1) if song.duration > 0 else 15.0)
+                    if elapsed_total >= threshold:
+                        log.info(f"[HISTORY] Recording track after threshold: {song.title}")
+                        self.radio.history_manager.add(song)
+                        self.history_recorded = True
 
                 action_task = asyncio.create_task(self.radio.action_queue.get())
                 done_task = asyncio.create_task(done.wait())
@@ -532,10 +541,26 @@ class RadioPlayer:
                 voice.stop()
                 return True
         elif action == RadioAction.BACK:
-            log.info("[PLAYER] Navigating back in history.")
+            # Calculate total elapsed time for smart-back (Restart vs Previous)
+            elapsed = self.radio.track_start_offset
+            if self.radio.track_start_time and self.radio.status == RadioStatusEnum.PLAYING:
+                elapsed += (asyncio.get_event_loop().time() - self.radio.track_start_time)
+            
+            # If we've played more than 5 seconds, "Back" just restarts the current song.
+            if elapsed > 5.0:
+                log.info(f"[PLAYER] Restarting current track (elapsed: {int(elapsed)}s)")
+                self.radio.seek_position = 0
+                self.radio.is_seeking = True
+                voice.stop()
+                return True
+
+            # Otherwise, we genuinely go back in history.
+            log.info(f"[PLAYER] Navigating to previous track in history (elapsed: {int(elapsed)}s)")
             
             # Use pointer for non-destructive back
-            next_ptr = self.radio.history_ptr + (1 if self.radio.current_song else 0)
+            # If we are currently navigating, we use the current ptr. 
+            # If not, we start at 1 to skip the entry we might have just added (or about to add)
+            next_ptr = self.radio.history_ptr + (1 if self.radio.current_song and not self.radio.is_navigating else 0)
             back_song = self.radio.history_manager.get_latest(offset=next_ptr)
 
             if back_song:
@@ -548,7 +573,7 @@ class RadioPlayer:
                 voice.stop()
                 return True
             
-            # If no history, just restart current
+            # Fallback: just restart current
             self.radio.seek_position = 0
             self.radio.is_seeking = True
             voice.stop()

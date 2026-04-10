@@ -84,8 +84,8 @@ class RadioManager:
         return self.history_manager.history
 
     def dispatch(self, action: RadioAction, data: Any = None, user: Optional[discord.Member | discord.User] = None):
-        user_str = f" by {user.name}" if user else ""
-        data_str = f" with [{data}]" if data else ""
+        user_str = f" by {user.name}" if user else " (System/Auto)"
+        data_str = f" with [{data}]" if data is not None else ""
         log.info(f"[ACTION] {action.name}{data_str}{user_str}")
         if user:
             self.last_user = user

@@ -24,6 +24,7 @@ class WebLinkButton(discord.ui.Button):
 
     @handle_ui_error
     async def callback(self, interaction: discord.Interaction):
+        modal = WebLinkModal(self.radio)
         await interaction.response.send_modal(modal)
 
 # This is the pop-up window used to input a web link.

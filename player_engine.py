@@ -453,7 +453,9 @@ class RadioPlayer:
                 
                 # Delayed History Recording (Only if not already recorded and not browsing)
                 if not self.history_recorded and not self.radio.is_navigating and song:
-                    elapsed_total = self.radio.track_start_offset + (asyncio.get_event_loop().time() - self.radio.track_start_time)
+                    elapsed_total = self.radio.track_start_offset
+                    if self.radio.track_start_time:
+                        elapsed_total += (asyncio.get_event_loop().time() - self.radio.track_start_time)
                     # Record after 15 seconds or 10% of duration (for short tracks)
                     threshold = min(15.0, (song.duration * 0.1) if song.duration > 0 else 15.0)
                     if elapsed_total >= threshold:
